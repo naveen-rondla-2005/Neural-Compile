@@ -9,6 +9,7 @@ from .editor_module import editor_page, cfg_page
 from .visualizer_module import visualizer_page
 from .history_module import history_page
 from .ast_module import ast_page
+from .contact_module import contact_page
 from .models import DeviceProfile, HistoryEntry  # ensure tables are created
 from .fingerprint import DeviceState
 
@@ -30,6 +31,7 @@ app.add_page(cfg_page,        route="/cfg",        title="Neural Compile - CFG",
 app.add_page(ast_page,        route="/ast",        title="Neural Compile - AST",        on_load=DeviceState.check_or_create_id)
 app.add_page(visualizer_page, route="/visualizer", title="Neural Compile - Visualizer", on_load=DeviceState.check_or_create_id)
 app.add_page(history_page,    route="/history",    title="Neural Compile - History",    on_load=DeviceState.check_or_create_id)
+app.add_page(contact_page,     route="/contact",    title="Neural Compile - Contact",   on_load=DeviceState.check_or_create_id)
 app.add_page(about_page,      route="/about",      title="Neural Compile - About",      on_load=DeviceState.check_or_create_id)
 app.add_page(help_page,       route="/help",       title="Neural Compile - Help",       on_load=DeviceState.check_or_create_id)
 

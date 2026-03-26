@@ -410,10 +410,10 @@ Code:
 
 
 # ── visualizer_page UI ────────────────────────────────────────────────────────
-def code_execution_view():
+def code_execution_view(state: VisualizerState):
     def render_line(line, index):
         # Comparison with integer line number
-        is_active = (index + 1) == VisualizerState.current_step["line"]
+        is_active = (index + 1) == state.current_step["line"]
         
         return rx.hstack(
             rx.box(
@@ -451,7 +451,7 @@ def code_execution_view():
     return rx.scroll_area(
         rx.vstack(
             rx.foreach(
-                VisualizerState.code_lines,
+                state.code_lines,
                 lambda line, index: render_line(line, index)
             ),
             width="100%",
@@ -499,8 +499,8 @@ def visualizer_page():
                 # Left: Editor or Execution View
                 rx.box(
                     rx.cond(
-                        VisualizerState.steps.length() > 0,
-                        code_execution_view(),
+                        VisualizerState.steps,
+                        code_execution_view(VisualizerState),
                         MonacoEditor.create(
                             height="100%",
                             language=VisualizerState.language,
@@ -539,8 +539,8 @@ def visualizer_page():
                             rx.text((VisualizerState.current_step_index + 1).to(str), font_size="12px", font_family="JetBrains Mono"),
                             rx.text(" / ", font_size="12px", font_family="JetBrains Mono"),
                             rx.cond(
-                                VisualizerState.steps.length() > 0,
-                                rx.text(VisualizerState.steps.length().to(str), font_size="12px", font_family="JetBrains Mono"),
+                                VisualizerState.steps,
+                                rx.text(VisualizerState.steps.to(list).length().to(str), font_size="12px", font_family="JetBrains Mono"),
                                 rx.text("1", font_size="12px", font_family="JetBrains Mono")
                             ),
                             spacing="1", align="center"

@@ -117,8 +117,9 @@ def navbar(active_page: str = None):
                 nav_link("Editor", "/editor"),
                 nav_link("CFG", "/cfg"),
                 nav_link("AST", "/ast"),
-                nav_link("Visualizer", "/visualizer"),
+                nav_link("Visualize", "/visualizer"),
                 nav_link("History", "/history"),
+                nav_link("Contact", "/contact"),
                 nav_link("About", "/about"),
                 rx.button(
                     rx.color_mode_cond(
