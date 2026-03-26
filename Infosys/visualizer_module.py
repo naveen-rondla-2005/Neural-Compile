@@ -246,7 +246,7 @@ class VisualizerState(rx.State):
     @rx.var
     def current_step(self) -> dict:
         if not self.steps:
-            return {"line": 1, "locals": {}, "stdout": "", "func_name": "main", "event": "start"}
+            return {"line": 1, "locals": {}, "stdout": "", "func_name": "main", "event": "start", "error": ""}
         return self.steps[min(self.current_step_index, len(self.steps) - 1)]
 
     def set_code(self, val: str):
@@ -527,8 +527,9 @@ def visualizer_page():
                         rx.button(rx.icon("chevron-right"), on_click=VisualizerState.next_step,
                                   variant="outline", size="2"),
                         rx.text(
-                            f"{VisualizerState.current_step_index + 1} / ",
-                            rx.cond(VisualizerState.steps.length() > 0, VisualizerState.steps.length(), 1),
+                            (VisualizerState.current_step_index + 1).to(str),
+                            " / ",
+                            rx.cond(VisualizerState.steps.length() > 0, VisualizerState.steps.length().to(str), "1"),
                             font_size="12px", font_family="JetBrains Mono",
                         ),
                         spacing="3", align="center", width="100%",
@@ -539,18 +540,17 @@ def visualizer_page():
 
                     # Variable state
                     rx.vstack(
-                        rx.hstack(
-                            rx.icon("variable", size=14, color="#6B73FF"),
-                            rx.text("Variables", font_weight="700", size="2"),
+                        rx.vstack(
+                            rx.text("Line ", VisualizerState.current_line.to(str), font_weight="bold", font_size="12px"),
                             rx.spacer(),
-                            rx.badge(VisualizerState.current_step["func_name"], color_scheme="blue", variant="soft"),
-                            width="100%",
+                            rx.text("Function: ", VisualizerState.current_step["func_name"].to(str), font_size="12px", color="gray"),
+                            align="start", spacing="0"
                         ),
                         rx.box(
                             rx.cond(
                                 VisualizerState.current_step["error"],
                                 rx.text(
-                                    "❌ ERROR: ", VisualizerState.current_step["error"], 
+                                    "❌ ERROR: ", VisualizerState.current_step["error"].to(str), 
                                     font_family="'JetBrains Mono', monospace",
                                     font_size="12px", white_space="pre-wrap", color="#ff7b72",
                                     margin_bottom="8px"
@@ -564,6 +564,14 @@ def visualizer_page():
                                 ),
                                 font_family="'JetBrains Mono', monospace",
                                 font_size="12px", white_space="pre-wrap", color="var(--text-color)"
+                            ),
+                            rx.cond(
+                                VisualizerState.ai_explanation != "",
+                                rx.box(
+                                    rx.markdown(VisualizerState.ai_explanation.to(str)),
+                                    width="100%", padding="15px", background="rgba(107,115,255,0.05)", border_radius="10px",
+                                    margin_top="10px"
+                                ),
                             ),
                             width="100%", max_height="150px", overflow_y="auto",
                             padding="8px", background="var(--card-bg)", border_radius="6px",
@@ -580,7 +588,7 @@ def visualizer_page():
                                   rx.text("Output", font_weight="700", size="2"), width="100%"),
                         rx.box(
                             rx.vstack(
-                                rx.text(VisualizerState.current_step["stdout"],
+                                rx.text(VisualizerState.current_step["stdout"].to(str),
                                         font_family="'JetBrains Mono', monospace",
                                         font_size="12px", white_space="pre-wrap", color="var(--text-color)",
                                         width="100%"),
@@ -616,8 +624,9 @@ def visualizer_page():
                                 width="100%",
                             ),
                             rx.box(
-                                rx.html(VisualizerState.cfg_html, height="100%", width="100%"),
+                                rx.html(VisualizerState.cfg_html),
                                 height="100%", width="100%", flex="1",
+                                style={"overflow": "auto"}
                             ),
                             width="100%", flex="1", height="80vh",
                             padding="10px", spacing="2",

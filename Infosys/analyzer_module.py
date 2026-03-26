@@ -206,10 +206,10 @@ def analyzer_page():
 
             # Stats Dashboard
             rx.hstack(
-                neural_stat_card("Quality Score", f"{AnalyzerState.quality_score}%", "star", "#FFD700"),
-                neural_stat_card("Neural Complexity", f"{AnalyzerState.neural_complexity}%", "activity", "#FF6B6B"),
-                neural_stat_card("Semantic Intent", AnalyzerState.semantic_intent, "target", "#6B73FF"),
-                neural_stat_card("NLP Confidence", f"{AnalyzerState.nlp_confidence:.2f}", "brain", "#9747FF"),
+                neural_stat_card("Quality Score", AnalyzerState.quality_score.to(str) + "%", "star", "#FFD700"),
+                neural_stat_card("Neural Complexity", AnalyzerState.neural_complexity.to(str) + "%", "activity", "#FF6B6B"),
+                neural_stat_card("Semantic Intent", AnalyzerState.semantic_intent.to(str), "target", "#6B73FF"),
+                neural_stat_card("NLP Confidence", AnalyzerState.nlp_confidence.to(str), "brain", "#9747FF"),
                 width="100%", spacing="4", margin_top="10px",
             ),
 
