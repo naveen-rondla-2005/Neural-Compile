@@ -607,7 +607,11 @@ def editor_page():
                 rx.vstack(
                     rx.hstack(
                         rx.icon("cpu", color="#6B73FF", size=16),
-                        rx.heading(EditorState.is_visualizing.cond("NEURAL TUTOR", "TERMINAL"), size="3", color="var(--text-color)"),
+                        rx.cond(
+                            EditorState.is_visualizing,
+                            rx.heading("NEURAL TUTOR", size="3", color="var(--text-color)"),
+                            rx.heading("TERMINAL", size="3", color="var(--text-color)"),
+                        ),
                         rx.spacer(),
                         rx.cond(
                             EditorState.is_visualizing, 
