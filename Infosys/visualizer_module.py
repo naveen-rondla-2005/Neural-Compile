@@ -416,7 +416,7 @@ def code_execution_view():
                 visibility=rx.cond(is_active, "visible", "hidden")
             ),
             rx.text(
-                rx.text(index + 1),
+                index + 1,
                 width="30px",
                 font_family="JetBrains Mono",
                 font_size="12px",
@@ -527,8 +527,8 @@ def visualizer_page():
                         rx.button(rx.icon("chevron-right"), on_click=VisualizerState.next_step,
                                   variant="outline", size="2"),
                         rx.text(
-                            VisualizerState.current_step_index + 1, " / ",
-                            rx.text(rx.cond(VisualizerState.steps.length() > 0, VisualizerState.steps.length(), 1)),
+                            f"{VisualizerState.current_step_index + 1} / ",
+                            rx.cond(VisualizerState.steps.length() > 0, VisualizerState.steps.length(), 1),
                             font_size="12px", font_family="JetBrains Mono",
                         ),
                         spacing="3", align="center", width="100%",
@@ -559,7 +559,7 @@ def visualizer_page():
                             rx.text(
                                 rx.cond(
                                     VisualizerState.current_step["locals"],
-                                    VisualizerState.current_step["locals"].to_string(),
+                                    VisualizerState.current_step["locals"].to(str),
                                     "{}"
                                 ),
                                 font_family="'JetBrains Mono', monospace",

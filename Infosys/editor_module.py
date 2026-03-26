@@ -625,7 +625,15 @@ def editor_page():
                                 rx.button(rx.icon("chevrons-right"), on_click=EditorState.next_step, size="1"),
                                 width="100%", spacing="2", align="center", padding="8px 12px",
                             ),
-                            rx.box(rx.text(EditorState.current_step["vars"], font_family="monospace", font_size="11px"), padding="6px", background="var(--card-bg)"),
+                            rx.box(
+                                rx.text(
+                                    EditorState.current_step["vars"].to(str), 
+                                    font_family="monospace", 
+                                    font_size="11px"
+                                ), 
+                                padding="6px", 
+                                background="var(--card-bg)"
+                            ),
                             width="100%",
                         ),
                         rx.box(
