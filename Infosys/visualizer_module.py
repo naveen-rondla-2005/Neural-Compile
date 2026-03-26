@@ -424,11 +424,12 @@ def code_execution_view():
                 visibility=rx.cond(is_active, "visible", "hidden")
             ),
             rx.text(
-                index + 1,
+                (index + 1).to(str),
                 width="30px",
-                font_family="JetBrains Mono",
+                font_family="'JetBrains Mono', monospace",
                 font_size="12px",
-                color="gray",
+                color="var(--iris-8)",
+                opacity="0.5",
                 text_align="right",
                 padding_right="8px"
             ),
@@ -534,11 +535,15 @@ def visualizer_page():
                         ),
                         rx.button(rx.icon("chevron-right"), on_click=VisualizerState.next_step,
                                   variant="outline", size="2"),
-                        rx.text(
-                            (VisualizerState.current_step_index + 1).to(str),
-                            " / ",
-                            rx.cond(VisualizerState.steps.length() > 0, VisualizerState.steps.length().to(str), "1"),
-                            font_size="12px", font_family="JetBrains Mono",
+                        rx.hstack(
+                            rx.text((VisualizerState.current_step_index + 1).to(str), font_size="12px", font_family="JetBrains Mono"),
+                            rx.text(" / ", font_size="12px", font_family="JetBrains Mono"),
+                            rx.cond(
+                                VisualizerState.steps.length() > 0,
+                                rx.text(VisualizerState.steps.length().to(str), font_size="12px", font_family="JetBrains Mono"),
+                                rx.text("1", font_size="12px", font_family="JetBrains Mono")
+                            ),
+                            spacing="1", align="center"
                         ),
                         spacing="3", align="center", width="100%",
                         padding="10px",
@@ -564,14 +569,18 @@ def visualizer_page():
                                     margin_bottom="8px"
                                 ),
                             ),
-                            rx.text(
-                                rx.cond(
-                                    VisualizerState.current_step["locals"],
+                            rx.cond(
+                                VisualizerState.current_step["locals"],
+                                rx.text(
                                     VisualizerState.current_step["locals"].to(str),
-                                    "{}"
+                                    font_family="'JetBrains Mono', monospace",
+                                    font_size="12px", white_space="pre-wrap", color="var(--text-color)"
                                 ),
-                                font_family="'JetBrains Mono', monospace",
-                                font_size="12px", white_space="pre-wrap", color="var(--text-color)"
+                                rx.text(
+                                    "{}",
+                                    font_family="'JetBrains Mono', monospace",
+                                    font_size="12px", white_space="pre-wrap", color="var(--text-color)"
+                                )
                             ),
                             rx.cond(
                                 VisualizerState.ai_explanation != "",
