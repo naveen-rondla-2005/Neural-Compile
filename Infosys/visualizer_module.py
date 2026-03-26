@@ -242,12 +242,20 @@ class VisualizerState(rx.State):
     cfg_html: str = ""
     execution_timestamp: str = ""
     code_lines: list[str] = []
+    ai_explanation: str = ""
 
     @rx.var
     def current_step(self) -> dict:
         if not self.steps:
             return {"line": 1, "locals": {}, "stdout": "", "func_name": "main", "event": "start", "error": ""}
         return self.steps[min(self.current_step_index, len(self.steps) - 1)]
+
+    @rx.var
+    def current_line(self) -> int:
+        try:
+            return int(self.current_step.get("line", 1))
+        except (ValueError, TypeError):
+            return 1
 
     def set_code(self, val: str):
         self.code = val
