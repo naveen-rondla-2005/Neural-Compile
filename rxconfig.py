@@ -19,6 +19,7 @@ config = rx.Config(
     app_name="Infosys",
     api_url=api_url,
     cors_allowed_origins=["*"],
+    prerender=False, # Disable prerendering to fix SSR 'invalid element' errors
     plugins=[
         rx.plugins.SitemapPlugin(),
         rx.plugins.TailwindV4Plugin(),
