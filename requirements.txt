@@ -3,7 +3,7 @@ reflex==0.8.28.post1
 reflex-monaco==0.0.3
 
 # ── AI / LLM ────────────────────────────────────────────────────────────────────
-langchain-groq==0.2.7
+langchain-groq==0.2.5
 langchain-community==0.3.18
 langchain-core==0.3.40
 
