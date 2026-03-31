@@ -11,13 +11,10 @@ if not api_url:
     if space_id:
         user, space = space_id.split("/")
         api_url = f"https://{user}-{space.replace('.', '-')}.hf.space"
-    # 2. Reflex Cloud detection (using their system variables)
-    elif os.environ.get("REFLEX_APP_URL"):
-        api_url = os.environ.get("REFLEX_APP_URL")
-    # 3. Last resort fallback for production (if we aren't local but URL unknown)
-    elif os.environ.get("ENV") == "prod":
-        api_url = "" # Let Reflex infer the URL from the current origin
-    # 4. Local Development
+    # 2. Reflex Cloud detection: Let the platform handle it if not local or HF
+    elif os.environ.get("REFLEX_CLOUD") == "true":
+        api_url = None # Platform will inject its own URL
+    # 3. Local Development
     else:
         api_url = "http://localhost:8000"
 
