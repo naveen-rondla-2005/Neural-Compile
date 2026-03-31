@@ -586,20 +586,23 @@ def editor_page():
                     rx.box(
                         rx.cond(
                             EditorState.is_hydrated,
-                            MonacoEditor.create(
-                                width="100%", height="100%", language=EditorState.editor_language, value=EditorState.editor_code, theme=EditorState.editor_theme, on_change=EditorState.set_editor_code,
-                                options={
-                                    "fontSize": 14, 
-                                    "minimap": {"enabled": False}, 
-                                    "automaticLayout": True,
-                                    "suggestSelection": "first",
-                                    "quickSuggestions": {"other": True, "comments": False, "strings": True},
-                                    "wordBasedSuggestions": True,
-                                    "parameterHints": {"enabled": True},
-                                    "suggestOnTriggerCharacters": True,
-                                    "snippetSuggestions": "inline",
-                                    "acceptSuggestionOnEnter": "on",
-                                }
+                            rx.box(
+                                MonacoEditor.create(
+                                    width="100%", height="100%", language=EditorState.editor_language, value=EditorState.editor_code, theme=EditorState.editor_theme, on_change=EditorState.set_editor_code,
+                                    options={
+                                        "fontSize": 14, 
+                                        "minimap": {"enabled": False}, 
+                                        "automaticLayout": True,
+                                        "suggestSelection": "first",
+                                        "quickSuggestions": {"other": True, "comments": False, "strings": True},
+                                        "wordBasedSuggestions": True,
+                                        "parameterHints": {"enabled": True},
+                                        "suggestOnTriggerCharacters": True,
+                                        "snippetSuggestions": "inline",
+                                        "acceptSuggestionOnEnter": "on",
+                                    }
+                                ),
+                                width="100%", height="100%"
                             )
                         ),
                         width="100%", height="calc(100vh - 120px)",
@@ -818,14 +821,17 @@ def cfg_layout():
                     rx.box(
                         rx.cond(
                             EditorState.is_hydrated,
-                            MonacoEditor.create(
-                                id="cfg-editor-view",
-                                value=EditorState.editor_code,
-                                language=EditorState.editor_language,
-                                theme="vs-dark",
-                                options={"readOnly": True, "minimap": {"enabled": False}, "fontSize": 12},
-                                width="100%",
-                                height="100%",
+                            rx.box(
+                                MonacoEditor.create(
+                                    id="cfg-editor-view",
+                                    value=EditorState.editor_code,
+                                    language=EditorState.editor_language,
+                                    theme="vs-dark",
+                                    options={"readOnly": True, "minimap": {"enabled": False}, "fontSize": 12},
+                                    width="100%",
+                                    height="100%",
+                                ),
+                                width="100%", height="100%"
                             )
                         ),
                         flex="1", width="100%", border="1px solid var(--border-color)", border_radius="10px", overflow="hidden"

@@ -503,18 +503,21 @@ def visualizer_page():
                         code_execution_view(VisualizerState),
                         rx.cond(
                             VisualizerState.is_hydrated,
-                            MonacoEditor.create(
-                                height="100%",
-                                language=VisualizerState.language,
-                                value=VisualizerState.code,
-                                theme=VisualizerState.editor_theme,
-                                on_change=VisualizerState.set_code,
-                                options={
-                                    "fontSize": 14, "minimap": {"enabled": False},
-                                    "automaticLayout": True, "scrollBeyondLastLine": False,
-                                    "glyphMargin": True, "lineNumbersMinChars": 3,
-                                    "fontLigatures": True,
-                                },
+                            rx.box(
+                                MonacoEditor.create(
+                                    height="100%",
+                                    language=VisualizerState.language,
+                                    value=VisualizerState.code,
+                                    theme=VisualizerState.editor_theme,
+                                    on_change=VisualizerState.set_code,
+                                    options={
+                                        "fontSize": 14, "minimap": {"enabled": False},
+                                        "automaticLayout": True, "scrollBeyondLastLine": False,
+                                        "glyphMargin": True, "lineNumbersMinChars": 3,
+                                        "fontLigatures": True,
+                                    },
+                                ),
+                                height="100%", width="100%"
                             )
                         )
                     ),

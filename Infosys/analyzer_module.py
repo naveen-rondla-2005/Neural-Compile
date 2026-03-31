@@ -228,14 +228,17 @@ def analyzer_page():
                     rx.box(
                         rx.cond(
                             AnalyzerState.is_hydrated,
-                            MonacoEditor.create(
-                                id="analyzer-editor",
-                                value=AnalyzerState.code_input,
-                                on_change=AnalyzerState.set_code_input,
-                                language=AnalyzerState.language,
-                                theme="vs-dark",
-                                width="100%",
-                                height="100%",
+                            rx.box(
+                                MonacoEditor.create(
+                                    id="analyzer-editor",
+                                    value=AnalyzerState.code_input,
+                                    on_change=AnalyzerState.set_code_input,
+                                    language=AnalyzerState.language,
+                                    theme="vs-dark",
+                                    width="100%",
+                                    height="100%",
+                                ),
+                                width="100%", height="100%"
                             )
                         ),
                         width="100%", height="450px", 
