@@ -29,15 +29,20 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files and ensure correct ownership
 COPY --chown=user . .
 
-# Initialize Reflex (creates .web directory)
-RUN reflex init
+# Initialize Reflex and Export the frontend
+# Generating the build during Docker construction speeds up HF startup and avoids runtime build errors.
+RUN reflex init && reflex export --frontend-only --no-zip
+
+# Ensure the database directory is writable (HF specific)
+RUN touch reflex.db && chmod 666 reflex.db
 
 # The port will be provided dynamically by the hosting environment via the $PORT variable.
+EXPOSE 7860
 
 # Make the prestart script executable
 RUN chmod +x prestart.sh
 
-# Start using the prestart script which handles DB initialization
+# Start using the prestart script
 CMD ["bash", "prestart.sh"]
 
 

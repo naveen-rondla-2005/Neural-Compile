@@ -26,7 +26,7 @@ else
     echo "$(date): WARNING: reflex.db not found after initialization!" >> "$LOGFILE"
 fi
 
-# Launch the application on the provided port (Render/Hugging Face requirement)
-echo "$(date): Launching Neural Compile on port ${PORT:-7860}..." >> "$LOGFILE"
-# We bind both frontend and backend to the same port for single-port environments.
-exec reflex run --env prod --backend-port "${PORT:-7860}" --frontend-port "${PORT:-7860}"
+# Launch the application in production mode using Reflex's native single-port support
+# This serves both the frontend and backend on port 7860.
+echo "$(date): Launching Neural Compile in Single-Port mode on ${PORT:-7860}..." >> "$LOGFILE"
+exec reflex run --env prod --backend-port "${PORT:-7860}" --single-port
