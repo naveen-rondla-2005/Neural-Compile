@@ -501,18 +501,20 @@ def visualizer_page():
                     rx.cond(
                         VisualizerState.steps,
                         code_execution_view(VisualizerState),
-                        MonacoEditor.create(
-                            height="100%",
-                            language=VisualizerState.language,
-                            value=VisualizerState.code,
-                            theme=VisualizerState.editor_theme,
-                            on_change=VisualizerState.set_code,
-                            options={
-                                "fontSize": 14, "minimap": {"enabled": False},
-                                "automaticLayout": True, "scrollBeyondLastLine": False,
-                                "glyphMargin": True, "lineNumbersMinChars": 3,
-                                "fontLigatures": True,
-                            },
+                        rx.client_only(
+                            MonacoEditor.create(
+                                height="100%",
+                                language=VisualizerState.language,
+                                value=VisualizerState.code,
+                                theme=VisualizerState.editor_theme,
+                                on_change=VisualizerState.set_code,
+                                options={
+                                    "fontSize": 14, "minimap": {"enabled": False},
+                                    "automaticLayout": True, "scrollBeyondLastLine": False,
+                                    "glyphMargin": True, "lineNumbersMinChars": 3,
+                                    "fontLigatures": True,
+                                },
+                            )
                         )
                     ),
                     width="30%", height="100%",
