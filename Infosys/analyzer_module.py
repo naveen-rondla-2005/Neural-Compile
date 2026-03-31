@@ -16,6 +16,7 @@ from .fingerprint import DeviceState
 from .components import navbar, footer
 from reflex_monaco.monaco import MonacoEditor
 from .error_detector import get_python_score
+from .multi_language_detector import get_language_score
 
 class AnalysisEntry(pydantic.BaseModel):
     code: str
@@ -65,11 +66,14 @@ Perform a deep Natural Language Processing (NLP) and Neural Network-based semant
                 m.update(json.loads(json_match.group(1)))
         except:
             pass
-        # Deterministic Score for Python
-        ast_score = get_python_score(code) if language.lower() == "python" else 0
+        # Deterministic Score for languages
+        if language.lower() == "python":
+            deterministic_score = get_python_score(code)
+        else:
+            deterministic_score = get_language_score(code, language)
 
-        # Final score is a blend of AST logic and AI semantic judgment
-        final_score = ast_score if (language.lower() == "python" and ast_score > 0) else m.get("neural_complexity", 75)
+        # Final score is a blend of deterministic logic and AI semantic judgment
+        final_score = deterministic_score if deterministic_score > 0 else m.get("neural_complexity", 75)
         
         # Build metrics table for the report
         metrics_table = f"""
@@ -239,6 +243,14 @@ def analyzer_page():
                                     height="100%",
                                 ),
                                 width="100%", height="100%"
+                            ),
+                            rx.center(
+                                rx.vstack(
+                                    rx.spinner(size="3"),
+                                    rx.text("Connecting to Neural Engine...", font_size="14px", color="rgba(255,255,255,0.4)"),
+                                    align="center", spacing="3"
+                                ),
+                                width="100%", height="100%", background="rgba(0,0,0,0.1)"
                             )
                         ),
                         width="100%", height="450px", 

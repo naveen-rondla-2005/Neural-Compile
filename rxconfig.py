@@ -6,15 +6,18 @@ api_url = os.environ.get("API_URL")
 
 # Fallback logic for different environments
 if not api_url:
-    # 1. Check for Hugging Face Spaces
+    # 1. Hugging Face Spaces detection
     space_id = os.environ.get("SPACE_ID")
     if space_id:
         user, space = space_id.split("/")
         api_url = f"https://{user}-{space.replace('.', '-')}.hf.space"
-    # 2. Check if we are running on Reflex Cloud (using their generic subdomain)
-    elif os.environ.get("REFLEX_CLOUD") == "true":
-        api_url = "https://neuralcompile-neon-sun.reflex.run"
-    # 3. Default to Local Development
+    # 2. Reflex Cloud detection (using their system variables)
+    elif os.environ.get("REFLEX_APP_URL"):
+        api_url = os.environ.get("REFLEX_APP_URL")
+    # 3. Last resort fallback for production (if we aren't local but URL unknown)
+    elif os.environ.get("ENV") == "prod":
+        api_url = "" # Let Reflex infer the URL from the current origin
+    # 4. Local Development
     else:
         api_url = "http://localhost:8000"
 

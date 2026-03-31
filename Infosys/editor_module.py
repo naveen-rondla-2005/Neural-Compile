@@ -603,6 +603,14 @@ def editor_page():
                                     }
                                 ),
                                 width="100%", height="100%"
+                            ),
+                            rx.center(
+                                rx.vstack(
+                                    rx.spinner(size="3"),
+                                    rx.text("Connecting to Neural Engine...", font_size="14px", color="var(--iris-9)"),
+                                    align="center", spacing="3"
+                                ),
+                                width="100%", height="100%", background="rgba(0,0,0,0.2)"
                             )
                         ),
                         width="100%", height="calc(100vh - 120px)",

@@ -518,6 +518,14 @@ def visualizer_page():
                                     },
                                 ),
                                 height="100%", width="100%"
+                            ),
+                            rx.center(
+                                rx.vstack(
+                                    rx.spinner(size="3"),
+                                    rx.text("Connecting to Neural Engine...", font_size="14px", color="rgba(255,255,255,0.4)"),
+                                    align="center", spacing="3"
+                                ),
+                                width="100%", height="100%", background="rgba(0,0,0,0.1)"
                             )
                         )
                     ),
