@@ -11,20 +11,17 @@ if not api_url:
     if space_id:
         user, space = space_id.split("/")
         api_url = f"https://{user}-{space.replace('.', '-')}.hf.space"
-    # 2. Reflex Cloud detection: Let the platform handle it if not local or HF
-    elif os.environ.get("REFLEX_CLOUD") == "true":
-        api_url = None # Platform will inject its own URL
-    # 3. Local Development
+    # 2. Local/Cloud: Let Reflex handle it via environment or default to localhost
     else:
-        api_url = "http://localhost:8000"
+        api_url = os.environ.get("API_URL", "http://localhost:8000")
 
 config = rx.Config(
     app_name="Infosys",
     api_url=api_url,
     cors_allowed_origins=["*"],
-    prerender=False, # Disable prerendering to fix SSR 'invalid element' errors
+    prerender=True, 
     plugins=[
         rx.plugins.SitemapPlugin(),
-        rx.plugins.TailwindV4Plugin(),
+        # rx.plugins.TailwindV4Plugin(), # Disabled to isolate potential build issues
     ]
 )
