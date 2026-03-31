@@ -142,7 +142,7 @@ def about_page():
                     rx.heading("How It Works: Neural Networks & NLP", size="7"),
                     rx.text(
                         "At its core, Neural Compile treats code as a specialized form of natural language. "
-                        "By using Transformer-based models via Groq's LPU acceleration, we perform Natural Language Processing (NLP) "
+                        "By using Transformer-based models via Groq's API acceleration, we perform Natural Language Processing (NLP) "
                         "over the code's structural data. This allows the system to 'reason' about variables, loops, and logic "
                         "just like a senior engineer would during a code review.",
                         max_width="900px",

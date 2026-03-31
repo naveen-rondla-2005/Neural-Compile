@@ -52,15 +52,15 @@ Perform a deep Natural Language Processing (NLP) and Neural Network-based semant
 ```{language}
 {code}
 ```"""
-        openai_resp = llm.invoke(prompt).content
+        ai_resp = llm.invoke(prompt).content
         
         # Extract markdown report
-        report = re.split(r"```json", openai_resp, flags=re.IGNORECASE)[0]
+        report = re.split(r"```json", ai_resp, flags=re.IGNORECASE)[0]
         
         # Extract JSON metrics
         m = {"neural_complexity": 75, "semantic_intent": "General Logic", "maintainability_index": 80, "nlp_confidence": 0.95, "suggested_code": ""}
         try:
-            json_match = re.search(r"```json\n(.*?)\n```", openai_resp, re.DOTALL | re.IGNORECASE)
+            json_match = re.search(r"```json\n(.*?)\n```", ai_resp, re.DOTALL | re.IGNORECASE)
             if json_match:
                 m.update(json.loads(json_match.group(1)))
         except:
