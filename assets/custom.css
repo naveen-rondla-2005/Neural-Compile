@@ -531,3 +531,10 @@ code:not(pre code) {
   padding: 14px 16px !important;
   margin-top: 4px;
 }
+/* Hide "Built with Reflex" watermark */
+a[href="https://reflex.dev"] {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+

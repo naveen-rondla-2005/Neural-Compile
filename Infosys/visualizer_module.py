@@ -501,7 +501,8 @@ def visualizer_page():
                     rx.cond(
                         VisualizerState.steps,
                         code_execution_view(VisualizerState),
-                        rx.client_only(
+                        rx.cond(
+                            VisualizerState.is_hydrated,
                             MonacoEditor.create(
                                 height="100%",
                                 language=VisualizerState.language,
