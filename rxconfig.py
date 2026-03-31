@@ -11,11 +11,11 @@ if not api_url:
         space_id = os.environ.get("SPACE_ID", "")
         if "/" in space_id:
             user, space = space_id.split("/")
-            api_url = f"https://{user}-{space.replace('.', '-')}.hf.space"
+            api_url = f"https://neuralcompile-neon-sun.reflex.run"
         else:
-            api_url = ""
+            api_url = "https://neuralcompile-neon-sun.reflex.run"
     else:
-        api_url = "http://localhost:8000"
+        api_url = "https://neuralcompile-neon-sun.reflex.run"
 
 config = rx.Config(
     app_name="Infosys",
