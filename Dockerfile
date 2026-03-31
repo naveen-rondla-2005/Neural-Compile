@@ -31,12 +31,7 @@ COPY --chown=user . .
 # Initialize Reflex (creates .web directory)
 RUN reflex init
 
-# Expose the port used by Hugging Face Spaces
-EXPOSE 7860
-
-# Ensure Reflex knows which port to bind to
-ENV PORT=7860
-ENV HOST=0.0.0.0
+# The port will be provided dynamically by the hosting environment via the $PORT variable.
 
 # Make the prestart script executable
 RUN chmod +x prestart.sh
