@@ -48,21 +48,110 @@ def feature_highlight_card(icon, color, title, subtitle, description, href, badg
     )
 
 
-def faq_item(question, answer):
-    return rx.vstack(
-        rx.hstack(
-            rx.icon("circle-help", size=18, color="#6B73FF"),
-            rx.text(question, font_weight="700", size="3"),
+# FAQ data: (icon, question, answer)
+_FAQS = [
+    (
+        "code-2",
+        "What programming languages does Neural Compile support?",
+        "Neural Compile supports Python, JavaScript, TypeScript, Java, C, C++."
+        "The Monaco editor provides syntax highlighting for 50+ languages, while deep AI analysis and CFG generation "
+        "are optimized for Python, JavaScript, and TypeScript.",
+    ),
+    (
+        "user-x",
+        "Do I need to create an account to use Neural Compile?",
+        "No account is needed! Neural Compile uses a hardware fingerprint stored in your browser to identify your device. "
+        "Your code execution history is automatically saved and accessible from the History page, completely anonymously.",
+    ),
+    (
+        "zap",
+        "How fast is the AI analysis?",
+        "Extremely fast. We use Groq's LPU (Language Processing Unit) inference, which is 10-100x faster than "
+        "traditional GPU-based AI inference. You can expect AI code reviews to complete in under a second for most code snippets.",
+    ),
+    (
+        "git-branch",
+        "What is a Control Flow Graph (CFG) and why is it useful?",
+        "A CFG is a visual representation of all possible paths your code can take during execution. "
+        "Each node is a block of code, and edges represent jumps (like if/else or loops). It helps you visually "
+        "understand complex logic, identify dead code, and see how an AI reads your program's structure.",
+    ),
+    (
+        "monitor-play",
+        "What is the difference between the Visualizer and the CFG Viewer?",
+        "The Visualizer is a runtime tool — it executes your code step-by-step and shows you the memory state "
+        "(variables, stacks) at each moment. The CFG Viewer is a static analysis tool — it shows the logical "
+        "structure of your code's branches and paths without running it.",
+    ),
+    (
+        "shield-check",
+        "Is my code safe and private?",
+        "Your code is sent to the Groq API only when you explicitly click 'AI Analyze' or use the AI Chat. "
+        "Code execution happens on the Neural Compile server. We do not permanently store your source code; "
+        "history records contain execution outputs, not the full source.",
+    ),
+    (
+        "message-circle",
+        "Can the AI Chat see my current code?",
+        "Yes! The AI Chat Assistant is context-aware. It automatically includes the code from your current "
+        "editor session so you can ask questions like 'what does this function do?' or 'how can I optimize this loop?' "
+        "without needing to copy-paste anything.",
+    ),
+    (
+        "github",
+        "Is Neural Compile open source?",
+        "Yes! Neural Compile is open source and available on GitHub. The project is built with Reflex (Python web framework), "
+        "Groq for AI inference, and Monaco Editor for the code editing experience. Contributions and feedback are welcome.",
+    ),
+]
+
+
+def faq_accordion_item(icon: str, question: str, answer: str, value: str):
+    """
+    Accordion FAQ item styled to match the project's dark #0d1117 theme.
+    Uses custom.css classes: faq-accordion-item, faq-accordion-content, faq-answer-card.
+    """
+    return rx.accordion.item(
+        value=value,
+        header=rx.hstack(
+            rx.icon("circle-help", size=18, color="#6B73FF", flex_shrink="0"),
+            rx.text(
+                question,
+                size="3",
+                font_weight="600",
+                color="#e6edf3",
+            ),
             spacing="3",
             align="center",
+            width="100%",
         ),
-        rx.text(answer, color="gray", size="2", line_height="1.75", padding_left="30px"),
-        padding_y="20px",
-        border_bottom="1px solid rgba(107,115,255,0.12)",
-        align="start",
-        width="100%",
-        spacing="2",
+        content=rx.box(
+            rx.hstack(
+                rx.text(
+                    answer,
+                    size="2",
+                    color="#8b949e",
+                    line_height="1.8",
+                    flex="1",
+                ),
+                rx.box(
+                    rx.icon("message-circle", size=18, color="#6B73FF"),
+                    padding="8px",
+                    border_radius="50%",
+                    background="rgba(107,115,255,0.12)",
+                    border="1px solid rgba(107,115,255,0.2)",
+                    flex_shrink="0",
+                    align_self="flex-start",
+                ),
+                spacing="4",
+                align="start",
+                width="100%",
+            ),
+            class_name="faq-answer-card",
+        ),
+        class_name="faq-accordion-item",
     )
+
 
 
 def home_page():
@@ -73,7 +162,7 @@ def home_page():
             rx.center(
                 rx.vstack(
                     rx.image(src="/logo.png", width="150px", height="auto", margin_bottom="20px"),
-                    rx.badge("🧠 Neural Compile", color_scheme="blue", class_name="hero-badge"),
+                    rx.badge("🧠 Neural Compile(AI-Driven Code Reviewer)", color_scheme="blue", class_name="hero-badge"),
                     rx.heading(
                         "The AI-Powered Compilation Suite",
                         size="9",
@@ -226,23 +315,25 @@ def home_page():
             padding="60px 40px",
             max_width="1200px",
             margin_x="auto",
-            spacing="10",
+            spacing="9",
         ),
 
-        # === FAQ SECTION ===
+        # === FAQ SECTION — Accordion Cards ===
         rx.vstack(
+            # Section header
             rx.center(
                 rx.vstack(
-                    rx.badge("FAQ", color_scheme="green", size="2"),
+                    rx.badge("FAQ", color_scheme="violet", size="2"),
                     rx.heading(
                         "Frequently Asked Questions",
                         size="8",
                         text_align="center",
+                        color="white",
                     ),
                     rx.text(
                         "Everything you need to know about Neural Compile.",
                         text_align="center",
-                        color="gray",
+                        color="#94a3b8",
                         size="3",
                     ),
                     spacing="4",
@@ -251,74 +342,29 @@ def home_page():
                 ),
                 width="100%",
             ),
-            rx.grid(
-                rx.vstack(
-                    faq_item(
-                        "What programming languages does Neural Compile support?",
-                        "Neural Compile supports Python, JavaScript, TypeScript, Java, C, C++, Rust, Go, Ruby, and many more. "
-                        "The Monaco editor provides syntax highlighting for 50+ languages, while deep AI analysis and CFG generation "
-                        "are optimized for Python, JavaScript, and TypeScript.",
-                    ),
-                    faq_item(
-                        "Do I need to create an account to use Neural Compile?",
-                        "No account is needed! Neural Compile uses a hardware fingerprint stored in your browser to identify your device. "
-                        "Your code execution history is automatically saved and accessible from the History page, completely anonymously.",
-                    ),
-                    faq_item(
-                        "How fast is the AI analysis?",
-                        "Extremely fast. We use Groq's LPU (Language Processing Unit) inference, which is 10-100x faster than "
-                        "traditional GPU-based AI inference. You can expect AI code reviews to complete in under a second for most code snippets.",
-                    ),
-                    faq_item(
-                        "What is a Control Flow Graph (CFG) and why is it useful?",
-                        "A CFG is a visual representation of all possible paths your code can take during execution. "
-                        "Each node is a block of code, and edges represent jumps (like if/else or loops). It helps you visually "
-                        "understand complex logic, identify dead code, and see how an AI reads your program's structure.",
-                    ),
-                    align="start",
-                    spacing="0",
+            # Accordion — max width centered, matching the faq-accordion.tsx layout
+            rx.box(
+                rx.accordion.root(
+                    *[
+                        faq_accordion_item(icon, question, answer, f"faq-{i}")
+                        for i, (icon, question, answer) in enumerate(_FAQS)
+                    ],
+                    collapsible=True,
+                    type="single",
                     width="100%",
                 ),
-                rx.vstack(
-                    faq_item(
-                        "What is the difference between the Visualizer and the CFG Viewer?",
-                        "The Visualizer is a runtime tool — it executes your code step-by-step and shows you the memory state "
-                        "(variables, stacks) at each moment. The CFG Viewer is a static analysis tool — it shows the logical "
-                        "structure of your code's branches and paths without running it.",
-                    ),
-                    faq_item(
-                        "Is my code safe and private?",
-                        "Your code is sent to the Groq API only when you explicitly click 'AI Analyze' or use the AI Chat. "
-                        "Code execution happens on the Neural Compile server. We do not permanently store your source code; "
-                        "history records contain execution outputs, not the full source.",
-                    ),
-                    faq_item(
-                        "Can the AI Chat see my current code?",
-                        "Yes! The AI Chat Assistant is context-aware. It automatically includes the code from your current "
-                        "editor session so you can ask questions like 'what does this function do?' or 'how can I optimize this loop?' "
-                        "without needing to copy-paste anything.",
-                    ),
-                    faq_item(
-                        "Is Neural Compile open source?",
-                        "Yes! Neural Compile is open source and available on GitHub. The project is built with Reflex (Python web framework), "
-                        "Groq for AI inference, and Monaco Editor for the code editing experience. Contributions and feedback are welcome.",
-                    ),
-                    align="start",
-                    spacing="0",
-                    width="100%",
-                ),
-                columns="2",
-                spacing="8",
                 width="100%",
+                max_width="760px",
+                margin_x="auto",
             ),
             width="100%",
             padding="60px 40px",
             max_width="1200px",
             margin_x="auto",
-            spacing="10",
-            background="rgba(107,115,255,0.03)",
-            border_top="1px solid rgba(107,115,255,0.12)",
-            border_bottom="1px solid rgba(107,115,255,0.12)",
+            spacing="9",
+            border_top="1px solid rgba(107,115,255,0.15)",
+            border_bottom="1px solid rgba(107,115,255,0.15)",
+            background="rgba(5,5,25,0.4)",
         ),
 
         footer(),
@@ -326,7 +372,6 @@ def home_page():
         width="100%",
         spacing="0",
     )
-
 
 
 def about_page():

@@ -250,9 +250,11 @@ body {
   width: 100%;
   left: 0;
 }
+
 .nav-link-active {
   color: #6B73FF !important;
 }
+
 .nav-link-active::after {
   width: 100% !important;
   left: 0 !important;
@@ -407,7 +409,7 @@ pre,
 }
 
 /* Eliminate line-level and token-level backgrounds (Fixes 'messy' highlights) */
-pre span, 
+pre span,
 code span,
 .chat-markdown pre code *,
 .rt-CodeBlock * {
@@ -417,7 +419,8 @@ code span,
 
 /* Inline Code Fix (Blue chip aesthetic) */
 code:not(pre code) {
-  color: #7ee787 !important; /* Greenish for code contrast */
+  color: #7ee787 !important;
+  /* Greenish for code contrast */
   background-color: rgba(107, 115, 255, 0.15) !important;
   border: 1px solid rgba(107, 115, 255, 0.25) !important;
   padding: 2px 5px !important;
@@ -464,4 +467,67 @@ code:not(pre code) {
   opacity: 1;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(107, 115, 255, 0.4) !important;
+}
+
+/* ---- FAQ Accordion — Dark theme override ---- */
+
+/* Each item: dark card matching project bg */
+.faq-accordion-item {
+  background: rgba(22, 27, 34, 0.85) !important;
+  border: 1px solid rgba(107, 115, 255, 0.18) !important;
+  border-radius: 14px !important;
+  margin-bottom: 12px !important;
+  overflow: hidden;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+.faq-accordion-item:hover {
+  border-color: rgba(107, 115, 255, 0.45) !important;
+  box-shadow: 0 4px 24px rgba(107, 115, 255, 0.1) !important;
+}
+
+/* Trigger button: kill Radix violet fill, use project dark */
+.faq-accordion-item button,
+.faq-accordion-item [data-radix-collection-item] {
+  background: transparent !important;
+  color: #e6edf3 !important;
+  border: none !important;
+  padding: 18px 20px !important;
+  width: 100% !important;
+  text-align: left !important;
+  cursor: pointer;
+  transition: background 0.2s ease !important;
+}
+
+.faq-accordion-item button:hover {
+  background: rgba(107, 115, 255, 0.07) !important;
+}
+
+/* Open state trigger glow */
+.faq-accordion-item [data-state="open"]>button,
+.faq-accordion-item button[data-state="open"] {
+  background: rgba(107, 115, 255, 0.1) !important;
+  border-bottom: 1px solid rgba(107, 115, 255, 0.15) !important;
+}
+
+/* Answer content panel */
+.faq-accordion-content {
+  background: transparent !important;
+  padding: 0 20px 16px 20px !important;
+}
+
+/* Chevron icon */
+.faq-accordion-item svg.rt-AccordionChevron,
+.faq-accordion-item [data-radix-accordion-trigger] svg {
+  color: #6B73FF !important;
+  transition: transform 0.3s ease !important;
+}
+
+/* Answer inner card */
+.faq-answer-card {
+  background: rgba(13, 17, 23, 0.9) !important;
+  border: 1px solid rgba(107, 115, 255, 0.14) !important;
+  border-radius: 10px !important;
+  padding: 14px 16px !important;
+  margin-top: 4px;
 }

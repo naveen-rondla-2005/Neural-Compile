@@ -99,7 +99,7 @@ def navbar(active_page: str = None):
         rx.hstack(
             rx.hstack(
                 rx.image(src="/logo.png", width="32px", height="auto", border_radius="4px"),
-                rx.text("Neural Compile",
+                rx.text("Neural Compile (AI-Driven Code Reviewer)",
                     font_weight="800",
                     font_size="20px",
                     background="linear-gradient(90deg, #6B73FF, #9747FF)",
