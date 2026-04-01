@@ -231,6 +231,7 @@ class VisualizerState(rx.State):
     code: str = "# Write your Python code here...\n\nprint('Hello, Neural Compile!')"
     language: str = "python"
     editor_theme: str = "vs-dark"
+    update_version: int = 0
     supported_languages: list[str] = ["python", "javascript", "typescript", "c", "cpp", "java"]
     supported_themes: list[str] = ["vs-dark", "vs", "hc-black", "hc-light"]
 
@@ -276,6 +277,7 @@ class VisualizerState(rx.State):
 
     def set_language(self, lang: str):
         self.language = lang
+        self.update_version += 1
 
     def set_editor_theme(self, theme: str):
         self.editor_theme = theme
@@ -288,6 +290,7 @@ class VisualizerState(rx.State):
         self.current_step_index = 0
         self.cfg_html = ""
         self.is_playing = False
+        self.update_version += 1
 
     def next_step(self):
         if self.current_step_index < len(self.steps) - 1:
@@ -519,9 +522,10 @@ def visualizer_page():
                             VisualizerState.is_hydrated,
                             rx.box(
                                 MonacoEditor.create(
+                                    key=f"visualizer-{VisualizerState.update_version}",
                                     height="100%",
                                     language=VisualizerState.language,
-                                    value=VisualizerState.code,
+                                    default_value=VisualizerState.code,
                                     theme=VisualizerState.editor_theme,
                                     on_change=VisualizerState.set_code,
                                     options={

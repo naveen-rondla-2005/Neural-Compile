@@ -324,6 +324,7 @@ class EditorState(rx.State):
     editor_code: str = LANGUAGE_SAMPLES["python"]
     editor_language: str = "python"
     editor_theme: str = "vs-dark"
+    update_version: int = 0
     supported_languages: list[str] = ["python", "javascript", "typescript", "c", "cpp", "java"]
     supported_themes: list[str] = ["vs-dark", "vs", "hc-black", "hc-light"]
     terminal_output: str = "▶ Click RUN to execute your code."
@@ -356,6 +357,7 @@ class EditorState(rx.State):
         self.editor_language = lang
         if lang in LANGUAGE_SAMPLES:
             self.editor_code = LANGUAGE_SAMPLES[lang]
+        self.update_version += 1
 
     def set_editor_theme(self, theme: str):
         self.editor_theme = theme
@@ -554,6 +556,7 @@ Code:
     def apply_ai_fix(self):
         if self.ai_fixed_code:
             self.editor_code = self.ai_fixed_code
+            self.update_version += 1
             self.ai_fixed_code = ""
             self.ai_explanation = ""
             self.is_ai_fixing = False
@@ -588,7 +591,13 @@ def editor_page():
                             EditorState.is_hydrated,
                             rx.box(
                                 MonacoEditor.create(
-                                    width="100%", height="100%", language=EditorState.editor_language, value=EditorState.editor_code, theme=EditorState.editor_theme, on_change=EditorState.set_editor_code,
+                                    key=f"editor-{EditorState.update_version}",
+                                    width="100%", 
+                                    height="100%", 
+                                    language=EditorState.editor_language, 
+                                    default_value=EditorState.editor_code, 
+                                    theme=EditorState.editor_theme, 
+                                    on_change=EditorState.set_editor_code,
                                     options={
                                         "fontSize": 14, 
                                         "minimap": {"enabled": False}, 
