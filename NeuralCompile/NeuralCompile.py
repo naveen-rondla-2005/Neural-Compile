@@ -35,4 +35,13 @@ app.add_page(contact_page,     route="/contact",    title="Neural Compile - Cont
 app.add_page(about_page,      route="/about",      title="Neural Compile - About",      on_load=DeviceState.check_or_create_id)
 app.add_page(help_page,       route="/help",       title="Neural Compile - Help",       on_load=DeviceState.check_or_create_id)
 
-# Database initialization should be handled via 'reflex db migrate' in CI/CD or pre-deployment scripts.
+# Database Initialization (for Reflex Cloud SQLite defaults)
+# When deployed, ephemeral environments may fail to auto-migrate. This guarantees
+# that our SQLModel tables exist immediately before routing any events.
+from sqlmodel import SQLModel
+from sqlalchemy import create_engine
+
+db_url = config.db_url if config.db_url is not None else "sqlite:///reflex.db"
+if db_url.startswith("sqlite"):
+    engine = create_engine(db_url)
+    SQLModel.metadata.create_all(engine)
