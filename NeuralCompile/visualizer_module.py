@@ -257,6 +257,20 @@ class VisualizerState(rx.State):
         except (ValueError, TypeError):
             return 1
 
+    @rx.var
+    def locals_str(self) -> str:
+        """Safely formats the locals dictionary into a readable string on the backend."""
+        locs = self.current_step.get("locals", {})
+        if not locs:
+            return "{}"
+        if isinstance(locs, str):
+            return locs
+        import json
+        try:
+            return json.dumps(locs, indent=2)
+        except Exception:
+            return str(locs)
+
     def set_code(self, val: str):
         self.code = val
 
@@ -583,18 +597,10 @@ def visualizer_page():
                                     margin_bottom="8px"
                                 ),
                             ),
-                            rx.cond(
-                                VisualizerState.current_step["locals"],
-                                rx.text(
-                                    VisualizerState.current_step["locals"].to(str),
-                                    font_family="'JetBrains Mono', monospace",
-                                    font_size="12px", white_space="pre-wrap", color="var(--text-color)"
-                                ),
-                                rx.text(
-                                    "{}",
-                                    font_family="'JetBrains Mono', monospace",
-                                    font_size="12px", white_space="pre-wrap", color="var(--text-color)"
-                                )
+                            rx.text(
+                                VisualizerState.locals_str,
+                                font_family="'JetBrains Mono', monospace",
+                                font_size="12px", white_space="pre-wrap", color="var(--text-color)"
                             ),
                             rx.cond(
                                 VisualizerState.ai_explanation != "",
