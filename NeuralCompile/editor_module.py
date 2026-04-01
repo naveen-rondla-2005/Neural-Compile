@@ -422,7 +422,7 @@ class EditorState(rx.State):
         loop = asyncio.get_event_loop()
         output = await loop.run_in_executor(None, _run_code_sync, self.editor_code, self.editor_language)
         import datetime
-        now_ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now_ts = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + "Z"
         self.execution_timestamp = now_ts
         self.terminal_output = output
         self.execution_logs.append(LogEntry(timestamp=now_ts, category=self.editor_language, content=output))
@@ -717,7 +717,7 @@ def editor_page():
                                     ),
                                     rx.foreach(EditorState.execution_logs, lambda log: rx.box(
                                         rx.vstack(
-                                            rx.hstack(rx.badge(log.category, size="1"), rx.spacer(), rx.text(log.timestamp, font_size="9px")),
+                                            rx.hstack(rx.badge(log.category, size="1"), rx.spacer(), rx.moment(log.timestamp, format="h:mm:ss A", font_size="10px", color="var(--gray-9)")),
                                             rx.text(log.content, font_family="monospace", font_size="12px", white_space="pre-wrap"),
                                             align="start", spacing="1"
                                         ),

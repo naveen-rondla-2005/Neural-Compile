@@ -43,7 +43,7 @@ class HistoryState(rx.State):
                     result=r.result,
                     language=r.language,
                     category=r.category,
-                    timestamp_str=r.timestamp.strftime("%b %d, %Y  %I:%M %p") if r.timestamp else "",
+                    timestamp_str=r.timestamp.isoformat() + "Z" if r.timestamp else "",
                 )
                 for r in results
             ]
@@ -88,9 +88,10 @@ def history_page():
                                     rx.spacer(),
                                     rx.hstack(
                                         rx.icon("clock", size=14, color="gray"),
-                                        rx.text(
+                                        rx.moment(
                                             item.timestamp_str,
-                                            size="2", color="gray", font_family="monospace"
+                                            format="MMM DD, YYYY  h:mm A",
+                                            font_size="12px", color="gray", font_family="monospace"
                                         ),
                                         spacing="1", align="center",
                                     ),
