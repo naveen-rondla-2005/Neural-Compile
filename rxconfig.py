@@ -1,27 +1,26 @@
 import reflex as rx
 import os
 
-# Prioritize API_URL from environment variables (useful for Render/Docker)
-api_url = os.environ.get("API_URL")
+# Determine the api_url based on the deployment environment.
+# - Hugging Face Spaces (single-port mode): Do NOT set api_url; browser uses same origin.
+# - Reflex Cloud: Set explicitly via API_URL env var.
+# - Local dev: Leave as None (defaults to localhost).
 
-# Fallback logic for different environments
-if not api_url:
-    # 1. Hugging Face Spaces detection
-    space_id = os.environ.get("SPACE_ID")
-    if space_id:
-        user, space = space_id.split("/")
-        api_url = f"https://{user}-{space.replace('.', '-')}.hf.space"
-    # 2. Local/Cloud: Let Reflex handle it via environment or default to localhost
-    else:
-        api_url = os.environ.get("API_URL", "http://localhost:8000")
+api_url = os.environ.get("API_URL")  # Explicit override always wins
+
+# For Hugging Face Spaces with --single-port, api_url MUST be None.
+# The SPACE_ID env var is set automatically by HF; we use it to detect that environment.
+is_hf_space = bool(os.environ.get("SPACE_ID"))
+
+# Reflex Cloud production fallback
+if not api_url and not is_hf_space and os.getenv("REFLEX_ENV") == "prod":
+    api_url = "https://neuralcompile-lime-sun.reflex.run"
 
 config = rx.Config(
-    app_name="Infosys",
-    api_url=api_url,
+    app_name="NeuralCompile",
+    api_url=api_url if api_url and not is_hf_space else None,
     cors_allowed_origins=["*"],
-    prerender=True, 
     plugins=[
         rx.plugins.SitemapPlugin(),
-        # rx.plugins.TailwindV4Plugin(), # Disabled to isolate potential build issues
-    ]
+    ],
 )
