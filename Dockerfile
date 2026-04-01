@@ -1,14 +1,16 @@
-# Build Stage
+# syntax=docker/dockerfile:1
+# Enable BuildKit for cache mounts (dramatically speeds up repeated builds)
 FROM python:3.12-slim
 
-# Install system dependencies
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    build-essential \
+# Install ONLY the system packages we actually need.
+# build-essential / libgraphviz-dev / pkg-config removed — nothing in requirements.txt
+# needs compilation (all packages ship pre-built wheels).
+# apt cache is mounted so packages are not re-downloaded on every build.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     curl \
-    git \
     graphviz \
-    libgraphviz-dev \
-    pkg-config \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
@@ -18,32 +20,30 @@ USER user
 ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH
 
-# Set working directory to the user's home
+# Set working directory
 WORKDIR $HOME/app
 
-# Copy requirements and install
+# Install Python dependencies with pip cache mounted.
+# This layer is only rebuilt when requirements.txt changes.
 COPY --chown=user requirements.txt .
-RUN pip install --upgrade pip setuptools wheel
-RUN pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/home/user/.cache/pip,uid=1000 \
+    pip install --upgrade pip setuptools wheel && \
+    pip install -r requirements.txt
 
-# Copy project files and ensure correct ownership
+# Copy application source
 COPY --chown=user . .
 
-# Initialize Reflex and Export the frontend
-# Generating the build during Docker construction speeds up HF startup and avoids runtime build errors.
-RUN reflex init && reflex export --frontend-only --no-zip
+# Initialize Reflex (sets up .web directory structure).
+# NOTE: `reflex export` (frontend build) is intentionally moved to prestart.sh
+# so the heavy Next.js compilation step does NOT run on every Docker build.
+RUN reflex init
 
-# Ensure the database directory is writable (HF specific)
+# Ensure the database file is writable (HF Spaces requirement)
 RUN touch reflex.db && chmod 666 reflex.db
 
-# The port will be provided dynamically by the hosting environment via the $PORT variable.
-EXPOSE 7860
-
-# Make the prestart script executable
+# Make the startup script executable
 RUN chmod +x prestart.sh
 
-# Start using the prestart script
+EXPOSE 7860
+
 CMD ["bash", "prestart.sh"]
-
-
-
