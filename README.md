@@ -68,6 +68,23 @@ graph TD
 
 ---
 
+## 🧠 Neural Networks & NLP Integration
+
+NeuralCompile leverages state-of-the-art **Neural Networks** and **Natural Language Processing (NLP)** to provide a truly "intelligent" IDE experience. At its core, the system integrates **Large Language Models (LLMs)**—specifically **LLaMA 3.1**—to handle complex reasoning tasks.
+
+### 🦾 Neural Networks in Action
+*   **Deep Logic Reasoning**: By utilizing Transformer-based neural architectures, the IDE "understands" code intent, allowing it to detect subtle logical flaws and security risks that traditional compilers might miss.
+*   **Generative Code Optimization**: The system uses generative models to produce optimized versions of user code, focusing on reducing algorithmic complexity and improving resource efficiency.
+
+### 📝 Natural Language Processing (NLP)
+*   **Semantic Analysis**: We treat code as a language, applying NLP to perform semantic checks. This ensures that the codebase remains clean, modular, and adheres to industry-standard naming conventions.
+*   **Context-Aware Assistant**: Our **Neural Assistant** uses NLP to maintain a "conversation" with your code. It reads the current editor context to provide real-time explanations, tutorials, and debugging advice.
+*   **Synthetic Execution Tracing**: For complex languages, our NLP engine simulates a "mental model" of a CPU to generate high-fidelity execution traces, enabling the **Neural Tutor** visualizer even without a native debugger.
+
+---
+
+---
+
 ## ✨ Key Features
 
 - 🖊️ **Monaco Editor** — Professional-grade editor with syntax highlighting and autocompletion.
