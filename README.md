@@ -12,7 +12,7 @@ app_port: 7860
 
 NeuralCompile is a next-generation, AI-driven integrated development environment (IDE) designed to streamline the process of writing, analyzing, and visualizing code. Built with the **Reflex** framework and powered by **LLMs**, it provides developers with deep insights into their code's structure and logic in real-time.
 
-🚀 **Live Demo:** [https://neuralcompile-cyan-wood.reflex.run/](https://neuralcompile-cyan-wood.reflex.run/)
+🚀 **Live Demo:** [Click Here](https://neuralcompile-cyan-wood.reflex.run/)
 
 ---
 
@@ -98,7 +98,7 @@ For queries, bug reports, or future development collaborations:
 👤 **Naveen Rondla**
 - 🔗 **LinkedIn**: [Naveen Rondla](https://www.linkedin.com/in/naveen-rondla/)
 - 📧 **Email**: [naveenrondla@hotmail.com](mailto:naveenrondla@hotmail.com)
-- 🚀 **Portfolio/Demo**: [NeuralCompile Live](https://neuralcompile-cyan-wood.reflex.run/)
+- 🚀 **Live Demo**: [NeuralCompile Live](https://neuralcompile-cyan-wood.reflex.run/)
 
 ---
 *Created with ❤️ by Naveen Rondla*
