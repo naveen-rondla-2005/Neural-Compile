@@ -7,7 +7,7 @@ import os
 import re
 import json
 from datetime import datetime
-from typing import List, Dict
+from typing import List
 
 import reflex as rx
 import pydantic
@@ -15,7 +15,7 @@ from .models import HistoryEntry
 from .fingerprint import DeviceState
 from .components import navbar, footer
 from reflex_monaco.monaco import MonacoEditor
-from .error_detector import get_python_score, get_python_full_score
+from .error_detector import get_python_full_score
 from .multi_language_detector import get_language_full_score
 
 class AnalysisEntry(pydantic.BaseModel):

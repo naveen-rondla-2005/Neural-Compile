@@ -4,7 +4,6 @@ Includes ExecutionTracer, VisualizerState, and visualizer_page UI.
 """
 import asyncio
 import io
-import re
 import json
 import html as _html
 from typing import Any
@@ -89,7 +88,6 @@ def _build_cfg_iframe(cfg_data: dict, height: str = "100%") -> str:
         err = (cfg_data or {}).get("error", "CFG unavailable")
         return f"<div style='padding:16px;color:#ff7b72;font-family:JetBrains Mono;font-size:13px;'>⚠ {err}</div>"
     inner = _CFG_TEMPLATE.format(cfg_json=json.dumps(cfg_data))
-    import html as _html
     safe = _html.escape(inner, quote=True)
     return (
         f"<iframe srcdoc='{safe}' "
@@ -143,7 +141,8 @@ class ExecutionTracer:
         return self._trace_calls
 
     def trace_code(self, code: str) -> list[dict[str, Any]]:
-        import sys, contextlib
+        import sys
+        import contextlib
         self.code_string = code
         self.trace_data = []
         self.stdout_buffer = io.StringIO()

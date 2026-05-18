@@ -43,7 +43,7 @@ def feature_highlight_card(icon, color, title, subtitle, description, href, badg
         spacing="4",
         class_name="feature-highlight-card",
         width="100%",
-        _hover={"border": f"1px solid {color}88", "background": f"rgba(255,255,255,0.06)", "transform": "translateY(-4px)", "transition": "all 0.25s ease"},
+        _hover={"border": f"1px solid {color}88", "background": "rgba(255,255,255,0.06)", "transform": "translateY(-4px)", "transition": "all 0.25s ease"},
         transition="all 0.25s ease",
     )
 

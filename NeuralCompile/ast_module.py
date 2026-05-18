@@ -2,7 +2,6 @@
 ast_module.py - AST (Abstract Syntax Tree) visualization page.
 """
 import ast
-import json
 
 import reflex as rx
 from .components import navbar, footer

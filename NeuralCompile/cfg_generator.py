@@ -1,6 +1,6 @@
 import ast
 import networkx as nx
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 
 class CFGGenerator(ast.NodeVisitor):
     def __init__(self):

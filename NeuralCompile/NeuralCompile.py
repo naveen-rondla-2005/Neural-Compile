@@ -1,6 +1,4 @@
 import reflex as rx
-import os
-import subprocess
 from rxconfig import config
 
 from .home_module import home_page, about_page, help_page
@@ -10,7 +8,6 @@ from .visualizer_module import visualizer_page
 from .history_module import history_page
 from .ast_module import ast_page
 from .contact_module import contact_page
-from .models import DeviceProfile, HistoryEntry  # ensure tables are created
 from .fingerprint import DeviceState
 from .health import health_page
 

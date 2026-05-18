@@ -1,7 +1,7 @@
 import reflex as rx
 import uuid
 import json
-from .models import DeviceProfile, HistoryEntry
+from .models import DeviceProfile
 from datetime import datetime
 
 class DeviceState(rx.State):

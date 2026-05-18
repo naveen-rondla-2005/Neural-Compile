@@ -10,18 +10,13 @@ import subprocess
 import json
 import shutil
 import html as _html
-from datetime import datetime
-from typing import List, Optional
 
 import reflex as rx
 from reflex_monaco.monaco import MonacoEditor
 
-from .models import HistoryEntry
-from .fingerprint import DeviceState
 from .components import navbar, footer
 from .cfg_generator import generate_cfg
 from .multi_language_detector import get_language_full_score as get_multi_score
-from .error_detector import get_python_full_score
 
 import pydantic
 
@@ -278,7 +273,9 @@ def _analyze_code_sync(code: str, language: str) -> dict:
         from dotenv import load_dotenv
         load_dotenv()
         from langchain_groq import ChatGroq
-        import os, json, re
+        import os
+        import json
+        import re
         from .error_detector import get_python_full_score
         llm = ChatGroq(temperature=0.1, model_name="llama-3.1-8b-instant", api_key=os.getenv("GROQ_API_KEY"))
         prompt = f"""Review this {language} code for bugs, logic errors, and clean code violations.

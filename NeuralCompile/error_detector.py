@@ -1,8 +1,6 @@
 import ast
 import re
 import textwrap
-import json
-import os
 
 class CodeScorer(ast.NodeVisitor):
     """
