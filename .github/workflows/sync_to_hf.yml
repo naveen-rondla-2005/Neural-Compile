@@ -84,8 +84,19 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          # Re-initialize git to avoid pushing historical binary files that HF rejects
+          rm -rf .git
+          git init
           git config user.email "actions@github.com"
           git config user.name  "GitHub Actions"
+          
+          # Setup LFS for HF
+          git lfs install
+          git lfs track "*.png"
+          git lfs track "*.xls"
+          
+          git add .
+          git commit -m "Deploy to Hugging Face Spaces"
           git remote add hf https://naveenrondla:$HF_TOKEN@huggingface.co/spaces/naveenrondla/Neural-Compile || true
-          git push hf main --force
+          git push hf master:main --force
           echo "✅ Successfully deployed to Hugging Face Spaces!"
