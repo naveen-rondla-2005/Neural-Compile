@@ -107,3 +107,26 @@ def get_python_score(code: str) -> int:
         return score
     except:
         return 0
+
+def get_python_full_score(code: str) -> dict:
+    """Returns a full dictionary of scores and categories."""
+    try:
+        tree = ast.parse(code)
+        scorer = CodeScorer(code)
+        scorer.visit(tree)
+        score, categories, details = scorer.calculate_final_score()
+        return {
+            "total": score,
+            "naming": categories["Naming"],
+            "structure": categories["Structure"],
+            "logic": categories["Logic"],
+            "cleanliness": categories["Cleanliness"],
+            "quality": categories["Quality"],
+            "violations": details["Lost"]
+        }
+    except Exception as e:
+        return {
+            "total": 0, "naming": 0, "structure": 0, "logic": 0, "cleanliness": 0, "quality": 0, 
+            "error": str(e)
+        }
+

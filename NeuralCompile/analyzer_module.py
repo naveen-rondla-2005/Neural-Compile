@@ -15,8 +15,8 @@ from .models import HistoryEntry
 from .fingerprint import DeviceState
 from .components import navbar, footer
 from reflex_monaco.monaco import MonacoEditor
-from .error_detector import get_python_score
-from .multi_language_detector import get_language_score
+from .error_detector import get_python_score, get_python_full_score
+from .multi_language_detector import get_language_full_score
 
 class AnalysisEntry(pydantic.BaseModel):
     code: str
@@ -48,6 +48,11 @@ Perform a deep Natural Language Processing (NLP) and Neural Network-based semant
     - "semantic_intent": 1-2 word description (e.g., "Data Pipeline", "Neural Net", "Algorithm")
     - "maintainability_index": 1-100
     - "nlp_confidence": 0-1.0
+    - "naming_score": 0-20 score based on naming conventions
+    - "structure_score": 0-20 score based on code organization
+    - "logic_score": 0-20 score based on logical flow/dead code
+    - "cleanliness_score": 0-20 score based on imports/variable usage
+    - "quality_score": 0-20 score based on general robustness
     - "suggested_code": the full corrected code block.
 
 ```{language}
@@ -67,13 +72,30 @@ Perform a deep Natural Language Processing (NLP) and Neural Network-based semant
         except:
             pass
         # Deterministic Score for languages
+        cat_scores = {}
         if language.lower() == "python":
-            deterministic_score = get_python_score(code)
+            full_res = get_python_full_score(code)
+            deterministic_score = full_res["total"]
+            cat_scores = {
+                "naming": full_res["naming"],
+                "structure": full_res["structure"],
+                "logic": full_res["logic"],
+                "cleanliness": full_res["cleanliness"],
+                "quality": full_res["quality"]
+            }
         else:
-            deterministic_score = get_language_score(code, language)
+            full_res = get_language_full_score(code, language)
+            deterministic_score = full_res["total"]
+            cat_scores = {
+                "naming": full_res["naming"],
+                "structure": full_res["structure"],
+                "logic": full_res["logic"],
+                "cleanliness": full_res["cleanliness"],
+                "quality": full_res["quality"]
+            }
 
         # Final score is a blend of deterministic logic and AI semantic judgment
-        final_score = deterministic_score if deterministic_score > 0 else m.get("neural_complexity", 75)
+        final_score = deterministic_score if deterministic_score > 0 else sum(cat_scores.values())
         
         # Build metrics table for the report
         metrics_table = f"""
@@ -88,7 +110,7 @@ Perform a deep Natural Language Processing (NLP) and Neural Network-based semant
         # Prepend score and append metrics to report
         report_with_score = f"# Code Quality Score: {final_score}/100\n\n" + report + metrics_table
             
-        return {"report": report_with_score, "metrics": {**m, "quality_score": final_score}}
+        return {"report": report_with_score, "metrics": {**m, "final_quality_score": final_score, "cat_scores": cat_scores}}
     except Exception as e:
         return {"report": f"❌ Neural Analysis failed: {e}", "metrics": {"quality_score": 0}}
 
@@ -101,12 +123,20 @@ class AnalyzerState(rx.State):
     is_analyzing: bool = False
     
     # Neural & NLP Metrics
+    # Category Scores
+    naming_score: int = 0
+    structure_score: int = 0
+    logic_score: int = 0
+    cleanliness_score: int = 0
+    quality_score_cat: int = 0
+    suggested_code: str = ""
+    
+    # AI Semantic Stats (Legacy/Reference)
     quality_score: int = 0
     neural_complexity: int = 0
     semantic_intent: str = "N/A"
     maintainability: int = 0
     nlp_confidence: float = 0.0
-    suggested_code: str = ""
     
     # FIFO History (Limited to 5)
     analysis_history: List[AnalysisEntry] = []
@@ -129,7 +159,15 @@ class AnalyzerState(rx.State):
         
         self.analysis_result = data["report"]
         m = data["metrics"]
-        self.quality_score = m.get("quality_score", 0)
+        cats = m.get("cat_scores", {})
+        
+        self.quality_score = m.get("final_quality_score", 0)
+        self.naming_score = cats.get("naming", 0)
+        self.structure_score = cats.get("structure", 0)
+        self.logic_score = cats.get("logic", 0)
+        self.cleanliness_score = cats.get("cleanliness", 0)
+        self.quality_score_cat = cats.get("quality", 0)
+        
         self.neural_complexity = m.get("neural_complexity", 0)
         self.semantic_intent = m.get("semantic_intent", "N/A")
         self.maintainability = m.get("maintainability_index", 0)
@@ -179,6 +217,11 @@ class AnalyzerState(rx.State):
         self.analysis_history = []
         self.neural_complexity = 0
         self.semantic_intent = "N/A"
+        self.naming_score = 0
+        self.structure_score = 0
+        self.logic_score = 0
+        self.cleanliness_score = 0
+        self.quality_score_cat = 0
 
     def clear_input(self):
         self.code_input = ""
@@ -210,10 +253,11 @@ def analyzer_page():
 
             # Stats Dashboard
             rx.hstack(
-                neural_stat_card("Quality Score", AnalyzerState.quality_score.to(str) + "%", "star", "#FFD700"),
-                neural_stat_card("Neural Complexity", AnalyzerState.neural_complexity.to(str) + "%", "activity", "#FF6B6B"),
-                neural_stat_card("Semantic Intent", AnalyzerState.semantic_intent.to(str), "target", "#6B73FF"),
-                neural_stat_card("NLP Confidence", AnalyzerState.nlp_confidence.to(str), "brain", "#9747FF"),
+                neural_stat_card("Naming", AnalyzerState.naming_score.to(str) + "/20", "type", "#6B73FF"),
+                neural_stat_card("Structure", AnalyzerState.structure_score.to(str) + "/20", "layout-dashboard", "#9747FF"),
+                neural_stat_card("Logic", AnalyzerState.logic_score.to(str) + "/20", "git-branch", "#E36209"),
+                neural_stat_card("Cleanliness", AnalyzerState.cleanliness_score.to(str) + "/20", "sparkles", "#7ee787"),
+                neural_stat_card("Robustness", AnalyzerState.quality_score_cat.to(str) + "/20", "shield-check", "#FFD700"),
                 width="100%", spacing="4", margin_top="10px",
             ),
 

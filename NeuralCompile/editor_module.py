@@ -8,8 +8,10 @@ import os
 import tempfile
 import subprocess
 import json
+import shutil
 import html as _html
 from datetime import datetime
+from typing import List, Optional
 
 import reflex as rx
 from reflex_monaco.monaco import MonacoEditor
@@ -18,6 +20,8 @@ from .models import HistoryEntry
 from .fingerprint import DeviceState
 from .components import navbar, footer
 from .cfg_generator import generate_cfg
+from .multi_language_detector import get_language_full_score as get_multi_score
+from .error_detector import get_python_full_score
 
 import pydantic
 
@@ -82,7 +86,7 @@ class ChatState(rx.State):
         code_context = (
             f"Language: {editor_state.editor_language}\n"
             f"Code:\n{editor_state.editor_code}\n\n"
-            f"Recent Execution Output:\n{editor_state.terminal_output}"
+            f"Recent Execution Output:\n{chr(10).join(editor_state.terminal_history)}"
         )
         
         try:
@@ -212,14 +216,20 @@ def markdown_components(lang: str):
             ),
         ),
     }
+# ── Interactive Process Registry ──────────────────────────────────────────────
+# Tracks active subprocesses for each session to allow real-time stdin interaction.
+ACTIVE_PROCESSES: dict[str, asyncio.subprocess.Process] = {}
 
-# ── Execution helper ───────────────────────────────────────────────────────────
-def _run_code_sync(code: str, language: str) -> str:
+# ── Execution helper (Legacy Batch) ───────────────────────────────────────────
+def _run_code_sync(code: str, language: str, stdin_data: str = "") -> str:
     lang = language.lower()
     if lang == "python":
         try:
-            result = subprocess.run(["python3", "-c", code], capture_output=True, text=True, timeout=10)
-            return (result.stdout + result.stderr).strip() or "✅ Executed (no output)"
+            result = subprocess.run(["python3", "-c", code], input=stdin_data, capture_output=True, text=True, timeout=10)
+            output = (result.stdout + result.stderr).strip()
+            if "EOFError: EOF when reading a line" in output:
+                output += "\n\n💡 Neural Hint: Detected input() call but no data was found in 'Standard Input'. Please provide your input in the box below the terminal before clicking RUN."
+            return output or "✅ Executed (no output)"
         except subprocess.TimeoutExpired: return "⏱ Execution timed out (10s)"
         except Exception as e: return f"❌ {e}"
     elif lang in ("java", "c", "cpp", "c++"):
@@ -244,12 +254,11 @@ def _run_code_sync(code: str, language: str) -> str:
             
             # Execution
             if lang == "java":
-                # For Java, find class name by filename (javac produces <name>.class)
                 class_path = os.path.dirname(fname)
                 class_name = os.path.basename(fname).replace(".java", "")
-                res = subprocess.run(["java", "-cp", class_path, class_name], capture_output=True, text=True, timeout=10)
+                res = subprocess.run(["java", "-cp", class_path, class_name], input=stdin_data, capture_output=True, text=True, timeout=10)
             else:
-                res = subprocess.run([output_name], capture_output=True, text=True, timeout=10)
+                res = subprocess.run([output_name], input=stdin_data, capture_output=True, text=True, timeout=10)
                 
             return (res.stdout + res.stderr).strip() or "✅ Compiled & Executed (no output)"
         except subprocess.TimeoutExpired: return "⏱ Runtime timed out (10s)"
@@ -257,7 +266,7 @@ def _run_code_sync(code: str, language: str) -> str:
         except Exception as e: return f"❌ Runtime Error: {e}"
     elif lang in ("javascript", "typescript"):
         try:
-            r = subprocess.run(["node", "-e", code], capture_output=True, text=True, timeout=10)
+            r = subprocess.run(["node", "-e", code], input=stdin_data, capture_output=True, text=True, timeout=10)
             return (r.stdout + r.stderr).strip() or "✅ Executed (no output)"
         except FileNotFoundError: return "⚠ Node.js not found."
         except Exception as e: return f"❌ {e}"
@@ -270,7 +279,7 @@ def _analyze_code_sync(code: str, language: str) -> dict:
         load_dotenv()
         from langchain_groq import ChatGroq
         import os, json, re
-        from .error_detector import get_python_score
+        from .error_detector import get_python_full_score
         llm = ChatGroq(temperature=0.1, model_name="llama-3.1-8b-instant", api_key=os.getenv("GROQ_API_KEY"))
         prompt = f"""Review this {language} code for bugs, logic errors, and clean code violations.
 **Requirements**:
@@ -282,7 +291,12 @@ def _analyze_code_sync(code: str, language: str) -> dict:
 Return a RAW JSON object with this exact structure:
 {{
   "explanation": "Detailed markdown explanation of the issues and how to fix them.",
-  "fixed_code": "The complete refined code block."
+  "fixed_code": "The complete refined code block.",
+  "naming_score": 0-20,
+  "structure_score": 0-20,
+  "logic_score": 0-20,
+  "cleanliness_score": 0-20,
+  "quality_score": 0-20
 }}
 Code:\n```{language}\n{code}\n```"""
         resp = llm.invoke(prompt).content
@@ -302,14 +316,37 @@ Code:\n```{language}\n{code}\n```"""
                     except: break
         
         # Scoring Integration
-        ast_score = get_python_score(code) if language.lower() == "python" else 0
-        final_score = ast_score if (language.lower() == "python" and ast_score > 0) else 75
+        cat_scores = {}
+        if language.lower() == "python":
+            full_res = get_python_full_score(code)
+            ast_score = full_res["total"]
+            cat_scores = {
+                "naming": full_res["naming"],
+                "structure": full_res["structure"],
+                "logic": full_res["logic"],
+                "cleanliness": full_res["cleanliness"],
+                "quality": full_res["quality"]
+            }
+        else:
+            full_res = get_multi_score(code, language)
+            ast_score = full_res["total"]
+            cat_scores = {
+                "naming": full_res["naming"],
+                "structure": full_res["structure"],
+                "logic": full_res["logic"],
+                "cleanliness": full_res["cleanliness"],
+                "quality": full_res["quality"]
+            }
+        
+        final_score = ast_score if (language.lower() == "python" and ast_score > 0) else sum(cat_scores.values())
         
         # Prepend score to explanation
         explanation = res_dict.get("explanation", "")
         if explanation:
             res_dict["explanation"] = f"### 📊 Final Quality Score: {final_score}/100\n\n" + explanation
             
+        res_dict["cat_scores"] = cat_scores
+        res_dict["final_quality_score"] = final_score
         return res_dict
     except Exception as e: return {"explanation": f"❌ AI analysis failed: {e}", "fixed_code": ""}
 
@@ -327,15 +364,24 @@ class EditorState(rx.State):
     update_version: int = 0
     supported_languages: list[str] = ["python", "javascript", "typescript", "c", "cpp", "java"]
     supported_themes: list[str] = ["vs-dark", "vs", "hc-black", "hc-light"]
-    terminal_output: str = "▶ Click RUN to execute your code."
     execution_timestamp: str = ""
     cfg_html: str = ""
+    terminal_history: list[str] = []
+    terminal_input: str = ""
+    process_id: str = ""
     suggested_codes: list[str] = []
     ai_explanation: str = ""
     ai_fixed_code: str = ""
     is_ai_fixing: bool = False
-    execution_logs: list[LogEntry] = []
     is_running: bool = False
+    
+    # Category Scores for AI Fix
+    naming_score: int = 0
+    structure_score: int = 0
+    logic_score: int = 0
+    cleanliness_score: int = 0
+    quality_score_cat: int = 0
+    final_quality_score: int = 0
 
     # Neural Tutor
     trace_steps: list[dict] = []
@@ -361,13 +407,19 @@ class EditorState(rx.State):
 
     def set_editor_theme(self, theme: str):
         self.editor_theme = theme
-        
+
+    def set_terminal_input(self, val: str):
+        self.terminal_input = val
+
+    def handle_terminal_keydown(self, key: str):
+        if key == "Enter":
+            return EditorState.submit_terminal_input
+
     def clear_terminal(self):
-        self.terminal_output = ""
+        self.terminal_history = []
         self.is_running = False
         self.cfg_html = ""
         self.suggested_codes = []
-        self.execution_logs = []
 
     def toggle_visualize(self):
         self.is_visualizing = False
@@ -404,32 +456,143 @@ class EditorState(rx.State):
             if not self.is_playing: break
             self.current_step_index += 1
             yield
+            if not self.is_playing: break
             
         self.is_playing = False
         yield rx.console_log("🛑 Visualizer playback stopped.")
 
-    async def stop_playback(self):
+    def stop_playback(self):
         self.is_playing = False
-        yield rx.console_log("⏸ Visualizer pause requested.")
+        return rx.console_log("⏸ Visualizer pause requested.")
 
     async def run_code(self):
         if self.is_running: return
         self.is_running = True
-        self.execution_logs = [] 
-        self.terminal_output = "⚡ Running..."
+        self.terminal_history = ["⚡ Subsystem Launching..."]
         self.cfg_html = ""
+        yield 
+        
+        # Unique ID for this process based on session
+        self.process_id = self.get_token()
+        
+        lang = self.editor_language.lower()
+        cmd = []
+        tdir = None
+
+        try:
+            if lang == "python":
+                cmd = ["python3", "-u", "-c", self.editor_code]
+            elif lang in ("c", "cpp", "c++", "java"):
+                # Compile First
+                suffix = {"java": ".java", "c": ".c", "cpp": ".cpp", "c++": ".cpp"}.get(lang, ".cpp")
+                tdir = tempfile.mkdtemp()
+                fname = os.path.join(tdir, "Main" + suffix)
+                # Try to extract public class name for Java
+                if lang == "java":
+                    match = re.search(r"public\s+class\s+(\w+)", self.editor_code)
+                    if match: fname = os.path.join(tdir, match.group(1) + ".java")
+                
+                with open(fname, "w") as f:
+                    f.write(self.editor_code)
+                
+                out_name = fname + ".out"
+                compile_cmd = {
+                    "c": ["gcc", fname, "-o", out_name, "-lm"],
+                    "cpp": ["g++", "-std=c++17", fname, "-o", out_name],
+                    "java": ["javac", fname]
+                }.get(lang)
+                
+                c_proc = await asyncio.create_subprocess_exec(*compile_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+                stdout, stderr = await c_proc.communicate()
+                if c_proc.returncode != 0:
+                    self.terminal_history.append(f"❌ Compile Error:\n{stderr.decode()}")
+                    self.is_running = False
+                    return
+
+                if lang == "java":
+                    cp = os.path.dirname(fname)
+                    # Hack: javac always produces class in the same folder. We assume Main or similar but for temp files we need the name.
+                    cname = os.path.basename(fname).replace(".java", "")
+                    cmd = ["java", "-cp", cp, cname]
+                else:
+                    cmd = [out_name]
+            elif lang in ("javascript", "typescript"):
+                cmd = ["node", "-e", self.editor_code]
+            else:
+                self.terminal_history.append(f"ℹ Interactive execution not supported for {self.editor_language}.")
+                self.is_running = False
+                return
+
+            # Start Streaming Process
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            ACTIVE_PROCESSES[self.process_id] = proc
+            self.terminal_history = [] # Start fresh for output
+            
+            # Read streaming output
+            buffer = ""
+            full_lines = []
+            while True:
+                chunk = await proc.stdout.read(4096)
+                if not chunk: break
+                
+                # Update buffer and split into lines
+                buffer += chunk.decode()
+                if "\n" in buffer:
+                    parts = buffer.split("\n")
+                    # Add all complete lines to our permanent list
+                    full_lines.extend(parts[:-1])
+                    buffer = parts[-1] # Remaining partial line
+                
+                # Update the state history for the UI
+                display_list = full_lines.copy()
+                if buffer: display_list.append(buffer)
+                
+                # Cap the history
+                self.terminal_history = display_list[-100:]
+                yield 
+            
+            # Final cleanup
+            if buffer:
+                full_lines.append(buffer)
+            self.terminal_history = full_lines[-100:]
+            yield
+
+            await proc.wait()
+            status = "Successful" if proc.returncode == 0 else f"Failed (Exit: {proc.returncode})"
+            self.terminal_history.append("")
+            self.terminal_history.append(f"=== Code Execution {status} ===")
+            
+        except Exception as e:
+            self.terminal_history.append(f"❌ System Error: {str(e)}")
+        finally:
+            if self.process_id in ACTIVE_PROCESSES:
+                del ACTIVE_PROCESSES[self.process_id]
+            if tdir and os.path.exists(tdir):
+                try: shutil.rmtree(tdir)
+                except: pass
+            self.is_running = False
+            yield
+
+    async def submit_terminal_input(self):
+        if not self.is_running or self.process_id not in ACTIVE_PROCESSES:
+            return
+        
+        proc = ACTIVE_PROCESSES[self.process_id]
+        user_val = self.terminal_input
+        self.terminal_input = "" # Clear UI
+        
+        # Echo the input in history to look like a real terminal
+        self.terminal_history.append(f"> {user_val}")
+        
+        if proc.stdin and not proc.stdin.is_closing():
+            proc.stdin.write((user_val + "\n").encode())
+            await proc.stdin.drain()
         yield
-        loop = asyncio.get_event_loop()
-        output = await loop.run_in_executor(None, _run_code_sync, self.editor_code, self.editor_language)
-        import datetime
-        now_ts = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + "Z"
-        self.execution_timestamp = now_ts
-        self.terminal_output = output
-        self.execution_logs.append(LogEntry(timestamp=now_ts, category=self.editor_language, content=output))
-        if self.editor_language == "python":
-            cfg_data = await loop.run_in_executor(None, generate_cfg, self.editor_code)
-            self.cfg_html = build_cfg_iframe(cfg_data, height="100%")
-        self.is_running = False
 
     async def generate_cfg_only(self):
         if self.is_running: return
@@ -501,8 +664,8 @@ Code:\n{self.editor_code}"""
         if self.is_running: return
         self.is_running = True
         self.is_visualizing = True
-        self.execution_logs = []  # Clear previous output
-        self.terminal_output = "🎬 Generating execution trace..."
+        self.is_visualizing = True
+        self.terminal_history = ["🎬 Generating execution trace..."]
         self.current_step_index = 0
         yield
         loop = asyncio.get_event_loop()
@@ -551,6 +714,13 @@ Code:
         res = await loop.run_in_executor(None, _analyze_code_sync, self.editor_code, self.editor_language)
         self.ai_explanation = res.get("explanation", "AI provided explanation.")
         self.ai_fixed_code = res.get("fixed_code", "")
+        cats = res.get("cat_scores", {})
+        self.naming_score = cats.get("naming", 0)
+        self.structure_score = cats.get("structure", 0)
+        self.logic_score = cats.get("logic", 0)
+        self.cleanliness_score = cats.get("cleanliness", 0)
+        self.quality_score_cat = cats.get("quality", 0)
+        self.final_quality_score = res.get("final_quality_score", 0)
         self.is_running = False
 
     def apply_ai_fix(self):
@@ -565,6 +735,12 @@ Code:
         self.is_ai_fixing = False
         self.ai_explanation = ""
         self.ai_fixed_code = ""
+        self.naming_score = 0
+        self.structure_score = 0
+        self.logic_score = 0
+        self.cleanliness_score = 0
+        self.quality_score_cat = 0
+        self.final_quality_score = 0
 
 
 # ── Page UI ───────────────────────────────────────────────────────────────────
@@ -677,6 +853,15 @@ def editor_page():
                                                 rx.button(rx.icon("x"), on_click=EditorState.close_ai_fix, variant="ghost", size="1"),
                                                 width="100%", align="center", padding_bottom="8px", border_bottom="1px solid var(--border-color)",
                                             ),
+                                            # Quality Metrics
+                                            rx.hstack(
+                                                rx.vstack(rx.text("Naming", size="1", color="gray"), rx.text(EditorState.naming_score.to(str) + "/20", size="2", font_weight="bold"), spacing="0", align="center"),
+                                                rx.vstack(rx.text("Structure", size="1", color="gray"), rx.text(EditorState.structure_score.to(str) + "/20", size="2", font_weight="bold"), spacing="0", align="center"),
+                                                rx.vstack(rx.text("Logic", size="1", color="gray"), rx.text(EditorState.logic_score.to(str) + "/20", size="2", font_weight="bold"), spacing="0", align="center"),
+                                                rx.vstack(rx.text("Cleaner", size="1", color="gray"), rx.text(EditorState.cleanliness_score.to(str) + "/20", size="2", font_weight="bold"), spacing="0", align="center"),
+                                                rx.vstack(rx.text("Robust", size="1", color="gray"), rx.text(EditorState.quality_score_cat.to(str) + "/20", size="2", font_weight="bold"), spacing="0", align="center"),
+                                                width="100%", justify="between", padding="8px", background="rgba(107,115,255,0.05)", border_radius="8px", margin_y="10px",
+                                            ),
                                             rx.markdown(EditorState.ai_explanation, class_name="chat-markdown", component_map=markdown_components(EditorState.editor_language)),
                                             rx.cond(
                                                 EditorState.ai_fixed_code != "",
@@ -715,14 +900,41 @@ def editor_page():
                                             width="100%", padding="16px", background="rgba(107,115,255,0.05)", border="1px solid rgba(107,115,255,0.2)", border_radius="10px", margin_bottom="20px",
                                         ),
                                     ),
-                                    rx.foreach(EditorState.execution_logs, lambda log: rx.box(
+                                    # NEW Unified Terminal History
+                                    rx.scroll_area(
                                         rx.vstack(
-                                            rx.hstack(rx.badge(log.category, size="1"), rx.spacer(), rx.moment(log.timestamp, format="h:mm:ss A", font_size="10px", color="var(--gray-9)")),
-                                            rx.text(log.content, font_family="monospace", font_size="12px", white_space="pre-wrap"),
-                                            align="start", spacing="1"
+                                            rx.foreach(EditorState.terminal_history, lambda line: rx.text(
+                                                line, 
+                                                font_family="'JetBrains Mono', monospace", 
+                                                font_size="13px", 
+                                                white_space="pre",
+                                                color=rx.cond(line.contains("==="), "#7ee787", "var(--text-color)"),
+                                                opacity=rx.cond(line[0] == ">", "0.6", "1.0"),
+                                            )),
+                                            width="100%", spacing="0", align="start"
                                         ),
-                                        padding="10px", border_left="2px solid #6B73FF", margin_bottom="8px"
-                                    )),
+                                        height="400px", width="100%", padding="10px",
+                                        background="#0d1117", border_radius="8px",
+                                    ),
+
+                                    # Interactive Input Line
+                                    rx.cond(
+                                        EditorState.is_running,
+                                        rx.hstack(
+                                            rx.text(">", color="#6B73FF", font_weight="bold", font_family="monospace"),
+                                            rx.input(
+                                                value=EditorState.terminal_input,
+                                                on_change=EditorState.set_terminal_input,
+                                                on_key_down=EditorState.handle_terminal_keydown,
+                                                placeholder="Type input here...",
+                                                variant="soft", width="100%", size="1",
+                                                font_family="monospace",
+                                                auto_focus=True,
+                                            ),
+                                            width="100%", align="center", padding="5px 10px",
+                                            background="rgba(255,255,255,0.03)", border_top="1px solid rgba(255,255,255,0.05)"
+                                        )
+                                    ),
                                     width="100%",
                                 ),
                                 height="100%",

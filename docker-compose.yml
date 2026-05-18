@@ -1,0 +1,74 @@
+# =============================================================================
+# NeuralCompile — Docker Compose
+# =============================================================================
+# Usage:
+#   Normal (local dev, hot-reload):  docker compose --profile dev up
+#   Production-like (single port):   docker compose --profile prod up
+#   With Nginx reverse proxy:        docker compose --profile prod --profile nginx up
+# =============================================================================
+
+services:
+
+  # ── App (dev) ──────────────────────────────────────────────────────────────
+  app-dev:
+    build:
+      context: .
+      target: dev          # uses the "dev" stage from the multi-stage Dockerfile
+    profiles: [dev]
+    env_file: .env
+    environment:
+      - REFLEX_ENV=dev
+    ports:
+      - "3000:3000"        # frontend
+      - "8000:8000"        # backend websocket / API
+    volumes:
+      - .:/home/user/app   # live-reload: source changes reflected immediately
+      - reflex_db_dev:/home/user/app/reflex.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  # ── App (prod) ─────────────────────────────────────────────────────────────
+  app-prod:
+    build:
+      context: .
+      target: prod         # uses the "prod" stage — fully baked image
+    profiles: [prod]
+    env_file: .env
+    environment:
+      - REFLEX_ENV=prod
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - reflex_db_prod:/home/user/app/reflex.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # ── Nginx Reverse Proxy (optional) ────────────────────────────────────────
+  # Enable with: docker compose --profile prod --profile nginx up
+  nginx:
+    image: nginx:alpine
+    profiles: [nginx]
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      app-prod:
+        condition: service_healthy
+    restart: unless-stopped
+
+# ── Named Volumes ─────────────────────────────────────────────────────────────
+volumes:
+  reflex_db_dev:
+  reflex_db_prod:

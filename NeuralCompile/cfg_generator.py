@@ -134,7 +134,7 @@ class CFGGenerator(ast.NodeVisitor):
         self.last_node_id = loop_guard
 
     def visit_Try(self, node):
-        nid = self._add_node(f"L{node.lineno}: try", "statement", node.lineno)
+        nid = self._add_special_node(f"L{node.lineno}: try", "statement", node.lineno)
         self.last_node_id = nid
         for child in node.body:
             self.visit(child)
@@ -143,7 +143,7 @@ class CFGGenerator(ast.NodeVisitor):
         for handler in node.handlers:
             self.last_node_id = nid
             ename = ast.unparse(handler.type) if handler.type and hasattr(ast, "unparse") else "Exception"
-            eid = self._add_node(f"L{handler.lineno}: except {ename}", "condition", handler.lineno)
+            eid = self._add_special_node(f"L{handler.lineno}: except {ename}", "condition", handler.lineno)
             for child in handler.body:
                 self.visit(child)
         

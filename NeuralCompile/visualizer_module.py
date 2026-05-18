@@ -319,13 +319,14 @@ class VisualizerState(rx.State):
             if not self.is_playing: break
             self.current_step_index += 1
             yield
+            if not self.is_playing: break
             
         self.is_playing = False
         yield rx.console_log("🛑 Playback stopped/finished.")
 
-    async def stop_playback(self):
+    def stop_playback(self):
         self.is_playing = False
-        yield rx.console_log("⏸ Pause requested.")
+        return rx.console_log("⏸ Pause requested.")
 
     def set_playback_speed(self, val: list):
         self.playback_speed = float(val[0])

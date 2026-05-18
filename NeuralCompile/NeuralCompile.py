@@ -12,6 +12,7 @@ from .ast_module import ast_page
 from .contact_module import contact_page
 from .models import DeviceProfile, HistoryEntry  # ensure tables are created
 from .fingerprint import DeviceState
+from .health import health_page
 
 app = rx.App(
     theme=rx.theme(
@@ -34,6 +35,7 @@ app.add_page(history_page,    route="/history",    title="Neural Compile - Histo
 app.add_page(contact_page,     route="/contact",    title="Neural Compile - Contact",   on_load=DeviceState.check_or_create_id)
 app.add_page(about_page,      route="/about",      title="Neural Compile - About",      on_load=DeviceState.check_or_create_id)
 app.add_page(help_page,       route="/help",       title="Neural Compile - Help",       on_load=DeviceState.check_or_create_id)
+app.add_page(health_page,     route="/health",     title="Neural Compile - Health")
 
 # Database Initialization (for Reflex Cloud SQLite defaults)
 # When deployed, ephemeral environments may fail to auto-migrate. This guarantees

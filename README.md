@@ -10,13 +10,106 @@ app_port: 7860
 
 # 🧠 NeuralCompile: AI-Powered IDE & Code Visualizer
 
+[![CI](https://github.com/naveen-rondla-2005/Neural-Compile/actions/workflows/ci.yml/badge.svg)](https://github.com/naveen-rondla-2005/Neural-Compile/actions/workflows/ci.yml)
+[![CD](https://github.com/naveen-rondla-2005/Neural-Compile/actions/workflows/sync_to_hf.yml/badge.svg)](https://github.com/naveen-rondla-2005/Neural-Compile/actions/workflows/sync_to_hf.yml)
+[![Docker Hub](https://img.shields.io/docker/pulls/naveenrondla/neuralcompile?logo=docker&label=Docker%20Hub)](https://hub.docker.com/r/naveenrondla/neuralcompile)
+[![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://python.org)
+[![Reflex](https://img.shields.io/badge/Reflex-0.8.28-purple?logo=data:image/svg+xml;base64,PHN2Zy8+)](https://reflex.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 NeuralCompile is a next-generation, AI-driven integrated development environment (IDE) designed to streamline the process of writing, analyzing, and visualizing code. Built with the **Reflex** framework and powered by **LLMs**, it provides developers with deep insights into their code's structure and logic in real-time.
 
 🚀 **Live Demo:** [Click Here](https://neuralcompile-cyan-wood.reflex.run/)
 
 ---
 
-## ❓ Problem Statement
+## 🚀 How to Run
+
+NeuralCompile supports **two run modes** — pick whichever suits you:
+
+### Mode 1: Normal (Local) Mode
+
+> Fastest way to get started — runs directly on your machine with hot-reload.
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/naveen-rondla-2005/Neural-Compile.git
+cd Neural-Compile
+
+# 2. Set up environment
+cp .env.example .env
+# Edit .env and add your GROQ_API_KEY
+
+# 3. Install dependencies
+make install
+# or: pip install -r requirements.txt
+
+# 4. Run!
+make run
+# or: reflex run
+# or: ./run.sh
+```
+
+App will be available at **http://localhost:3000**
+
+---
+
+### Mode 2: Docker Mode
+
+> Runs in an isolated container — no Python or deps needed on your machine.
+
+**Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop)
+
+```bash
+# Clone & configure
+git clone https://github.com/naveen-rondla-2005/Neural-Compile.git
+cd Neural-Compile
+cp .env.example .env   # then fill in GROQ_API_KEY
+
+# Dev mode (hot-reload — code changes reflected instantly)
+make docker-dev
+# or: ./run.sh --docker
+
+# Prod mode (single-port, optimised)
+make docker-prod
+# or: ./run.sh --docker-prod
+
+# Prod + Nginx reverse proxy
+make docker-nginx
+```
+
+| Command | URL | Description |
+|---|---|---|
+| `make docker-dev` | `http://localhost:3000` | Dev mode with hot-reload |
+| `make docker-prod` | `http://localhost:3000` | Production mode |
+| `make docker-nginx` | `http://localhost:80` | Prod behind Nginx proxy |
+
+> Or pull & run the pre-built image directly:
+> ```bash
+> docker pull naveenrondla/neuralcompile:latest
+> docker run -p 3000:3000 --env-file .env naveenrondla/neuralcompile:latest
+> ```
+
+---
+
+## 🏗️ DevOps Architecture
+
+```mermaid
+graph LR
+    Dev["👨‍💻 Developer"] -->|git push| GH["GitHub"]
+    GH -->|PR/Push| CI["CI: Lint + Docker Build"]
+    CI -->|main branch| CD["CD Pipeline"]
+    CD --> DockerHub["🐳 Docker Hub\nnaveenrondla/neuralcompile"]
+    CD --> HF["🤗 HF Spaces\nLive Demo"]
+    
+    subgraph Local Docker
+      Dev2["👨‍💻 Developer"] -->|make docker-dev| AppDev["App Container\nport 3000"]
+      Dev2 -->|make docker-nginx| Nginx["Nginx Proxy\nport 80"] --> AppProd["App Container\nport 3000"]
+    end
+```
+
+---
+
 
 Modern software development often involves jumping between multiple tools to write code, debug errors, and understand complex logic structures like Abstract Syntax Trees (AST) or Control Flow Graphs (CFG). Traditional IDEs provide limited visual feedback on logic flow, and integrating AI assistance often requires manual context switching, leading to:
 - Slower debugging cycles.
