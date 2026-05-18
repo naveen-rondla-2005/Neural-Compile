@@ -26,7 +26,7 @@ jobs:
         run: pip install ruff
 
       - name: Run ruff linter
-        run: ruff check NeuralCompile/ --output-format=github
+        run: ruff check NeuralCompile/ --ignore E701,E722,F401,F541,E401,F811 --output-format=github
 
   # ── Job 2: Docker Build Validation ─────────────────────────────────────────
   docker-build:

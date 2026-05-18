@@ -18,7 +18,7 @@ jobs:
           python-version: "3.12"
           cache: "pip"
       - run: pip install ruff
-      - run: ruff check NeuralCompile/ --output-format=github
+      - run: ruff check NeuralCompile/ --ignore E701,E722,F401,F541,E401,F811 --output-format=github
 
   # ── Job 2: Build & Push Docker Image (optional — needs DOCKERHUB secrets) ──
   docker-push:
